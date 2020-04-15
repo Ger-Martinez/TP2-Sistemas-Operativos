@@ -98,12 +98,8 @@ int main() {
 
 //static const int FONT_COLOR = 0xFFFFFF;
 //static const int BACKGROUND_COLOR = 0x000000;
+
 	char* a = malloc((uint64_t)100);
-    drawString(a);
-	for(int i =0; i<99; i++) {
-		a[i] = 'a';
-	}
-	a[99] = '\0';
 	free(a);
 
 	while(1){             
