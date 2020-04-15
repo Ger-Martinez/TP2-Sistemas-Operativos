@@ -104,7 +104,6 @@ int main() {
 		a[i] = 'a';
 	}
 	a[99] = '\0';
-	drawString(a);
 	free(a);
 
 	while(1){             

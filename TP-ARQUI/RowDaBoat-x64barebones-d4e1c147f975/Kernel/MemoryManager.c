@@ -7,8 +7,7 @@
 
 /* Keeps track of the number of calls to allocate and free memory as well as the
 number of free bytes remaining, but says nothing about fragmentation. */
-static uint16_t freeBytesRemaining = 0;
-static uint16_t minimumEverFreeBytesRemaining = 0;
+static uint64_t freeBytesRemaining = 0;
 static uint16_t numberOfSuccessfulAllocations = 0;
 static uint16_t numberOfSuccessfulFrees = 0;
 
@@ -34,14 +33,13 @@ static const uint16_t xHeapStructSize = sizeof(freeBlockNode);/*+ ( ( uint16_t )
 static freeBlockNode freeListStart, *freeListEnd = NULL;
 
 void* malloc(uint64_t wantedSize) {
-    freeBlockNode *block1, *previousBlock, *newBlock;
+    freeBlockNode *block1, *previousBlock, *newFreeBlock;
     void* returnAddress = NULL;
 	
     /* if this is the first call to malloc, then the heap has to be initialised with the list of free blocks */
     if( freeListEnd == NULL ) {
         heapInit();
     }
-
     /* Check the requested block size is not so large that the top bit is
 	set.  The top bit of the block size member of the freeBlockNode structure
 	is used to determine who owns the block - the application or the
@@ -57,7 +55,7 @@ void* malloc(uint64_t wantedSize) {
 
         if( ( wantedSize > 0 ) && ( wantedSize <= freeBytesRemaining ) ) {
 			/* Traverse the list from the start	(lowest address) block until
-			one	of adequate size is found. */
+			one	of adequate size is found. */ /* aca se ve el First Fit */
 			previousBlock = &freeListStart;
 			block1 = freeListStart.nextFreeBlock;
 			while( ( block1->blockSize < wantedSize ) && ( block1->nextFreeBlock != NULL ) ) {
@@ -71,7 +69,12 @@ void* malloc(uint64_t wantedSize) {
 			if( block1 != freeListEnd ) {
 				/* Return the memory space pointed to - jumping over the
 				freeBlockNode structure at its start. */
-				returnAddress = (void*) ( ((uint8_t*)previousBlock->nextFreeBlock) + xHeapStructSize );
+				// drawNumber(((uint64_t*)previousBlock->nextFreeBlock), 0xFFFFFF, 0x000000); /* 6MB */
+				// drawString(" + ");
+				// drawNumber(xHeapStructSize, 0xFFFFFF, 0x000000); /* 16 BYTES */
+				// drawString("  = ");
+				// drawNumber(((uint64_t*)previousBlock->nextFreeBlock) + xHeapStructSize, 0xFFFFFF, 0x000000); /* 6mb + 128 bytes */
+				returnAddress = (void*) ( ((uint64_t*)previousBlock->nextFreeBlock) + xHeapStructSize );
 
                 /* This block is being returned for use so must be taken out
 				of the list of free blocks. */
@@ -83,23 +86,19 @@ void* malloc(uint64_t wantedSize) {
 					block following the number of bytes requested. The void
 					cast is used to prevent byte alignment warnings from the
 					compiler. */
-					newBlock = (void*) ( ((uint8_t*)block1) + wantedSize );
-					//configASSERT( ( ( ( uint16_t ) newBlock ) & portBYTE_ALIGNMENT_MASK ) == 0 );
+					newFreeBlock = (void*) ( ((uint64_t*)block1) + wantedSize );
+					//configASSERT( ( ( ( uint16_t ) newFreeBlock ) & portBYTE_ALIGNMENT_MASK ) == 0 );
 
                     /* Calculate the sizes of two blocks split from the
 					single block. */
-					newBlock->blockSize = block1->blockSize - wantedSize;
+					newFreeBlock->blockSize = block1->blockSize - wantedSize;
 					block1->blockSize = wantedSize;
 
 					/* Insert the new block into the list of free blocks. */
-					prvInsertBlockIntoFreeList( newBlock );
+					prvInsertBlockIntoFreeList( newFreeBlock );
                 }
 
                 freeBytesRemaining -= block1->blockSize;
-
-				if( freeBytesRemaining < minimumEverFreeBytesRemaining ) {
-					minimumEverFreeBytesRemaining = freeBytesRemaining;
-				}
 
                 /* The block is being returned - it is allocated and owned
 				by the application and has no "next" block. */
@@ -113,7 +112,7 @@ void* malloc(uint64_t wantedSize) {
 }
 
 void free( void *addressToFree ) {
-    uint8_t* addr = (uint8_t*) addressToFree;
+    uint64_t* addr = (uint64_t*) addressToFree;
     freeBlockNode *block1;
 
 	if( addressToFree != NULL ) {
@@ -141,7 +140,7 @@ void free( void *addressToFree ) {
 
 static void prvInsertBlockIntoFreeList( freeBlockNode* blockToInsert ){
 	freeBlockNode* nodeIterator;
-	uint8_t *puc;
+	uint64_t *puc;
 
 	/* Iterate through the list until a block is found that has a higher address
 	than the block being inserted. */
@@ -151,16 +150,16 @@ static void prvInsertBlockIntoFreeList( freeBlockNode* blockToInsert ){
 
 	/* Do the block being inserted, and the block it is being inserted after
 	make a contiguous block of memory? */
-	puc = (uint8_t*) nodeIterator;
-	if( ( puc + nodeIterator->blockSize ) == (uint8_t*) blockToInsert ) {
+	puc = (uint64_t*) nodeIterator;
+	if( ( puc + nodeIterator->blockSize ) == (uint64_t*) blockToInsert ) {
 		nodeIterator->blockSize += blockToInsert->blockSize;
 		blockToInsert = nodeIterator;
 	}
 
 	/* Do the block being inserted, and the block it is being inserted before
 	make a contiguous block of memory? */
-	puc = (uint8_t*) blockToInsert;
-	if( ( puc + blockToInsert->blockSize ) == (uint8_t*) nodeIterator->nextFreeBlock ) {
+	puc = (uint64_t*) blockToInsert;
+	if( ( puc + blockToInsert->blockSize ) == (uint64_t*) nodeIterator->nextFreeBlock ) {
 		if( nodeIterator->nextFreeBlock != freeListEnd ) {
 			/* Form one big block from the two blocks. */
 			blockToInsert->blockSize += nodeIterator->nextFreeBlock->blockSize;
@@ -187,7 +186,7 @@ static void heapInit() {
     freeBlockNode* firstFreeBlock;
     uint64_t *addrAlignedHeap = (void*) 0x600000;  // desde los 6 megas
     uint64_t uxAddress = 0x8000000; // hasta los 128 megas
-	drawString("entre a heapInit | uxAddress= ");
+	drawString("entre a heapInit   ");
 	/*drawNumber(uxAddress, 0xFFFFFF, 0x000000);
 	drawString("      ");*/
 
@@ -210,6 +209,5 @@ static void heapInit() {
 	firstFreeBlock->nextFreeBlock = freeListEnd;
 
     /* Only one block exists - and it covers the entire usable heap space. */
-	minimumEverFreeBytesRemaining = firstFreeBlock->blockSize;
 	freeBytesRemaining = firstFreeBlock->blockSize;
 }
