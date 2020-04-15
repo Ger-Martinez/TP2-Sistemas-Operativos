@@ -17,6 +17,8 @@
 #include <video_driver.h>   // para incluir la funcion init_video_driver
 #include <time.h>   // seguro despues lo puedo sacar
 
+#include "MemoryManager.h"   // BORRAR DESPUES
+
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -93,6 +95,18 @@ void * initializeKernelBinary() {
 int main() {
 	load_idt();
 	init_VM_Driver();
+
+//static const int FONT_COLOR = 0xFFFFFF;
+//static const int BACKGROUND_COLOR = 0x000000;
+	char* a = malloc((uint64_t)100);
+    drawString(a);
+	for(int i =0; i<99; i++) {
+		a[i] = 'a';
+	}
+	a[99] = '\0';
+	drawString(a);
+	free(a);
+
 	while(1){             
 		((EntryPoint)sampleCodeModuleAddress)();
 	}

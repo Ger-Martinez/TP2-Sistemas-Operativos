@@ -4,6 +4,7 @@
 void drawCharInSpecificSpot(int x, int y, char character, int fontColor, int backgroundColor);
 void drawStringInSpecificSpot(int x, int y, char* string, int fontColor, int backgroundColor);
 void drawNumberInSpecificSpot(int x, int y, int number, int fontColor, int backgroundColor);
+void drawNumber(int number, int fontColor, int backgroundColor);
 
 // hace falta que este drawChar este aca????
 void drawChar(char character, int fontColor, int backgroundColor);
