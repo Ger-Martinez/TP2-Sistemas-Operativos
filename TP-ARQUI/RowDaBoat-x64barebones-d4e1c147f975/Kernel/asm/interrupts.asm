@@ -1,4 +1,3 @@
-
 GLOBAL _cli
 GLOBAL _sti
 GLOBAL picMasterMask
@@ -19,6 +18,7 @@ GLOBAL _exception0Handler
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN syscall_dispatcher
+EXTERN schedule_processes
 
 SECTION .text
 
@@ -128,7 +128,19 @@ _systemCallsHandler:
 
 ;8254 Timer (Timer Tick)
 _irq00Handler:
-	irqHandlerMaster 0
+	;irqHandlerMaster 0
+	pushState
+
+	mov rdi, rsp     ; give Stack Pointer to Scheduler, so it can SAVE it 
+	call schedule_processes
+	mov rsp, rax     ; switch the SP, so that now it points to the stack of the new process
+
+	; signal pic EOI (End of Interrupt)
+	mov al, 20h
+	out 20h, al
+
+	popState
+	iretq
 
 ;Keyboard
 _irq01Handler:

@@ -5,6 +5,6 @@
 // 0 --> unoccupied    1--> occupied
 uint8_t occupied_blocks[TOTAL_HEAP_SIZE / MINIMIN_BLOCK_SIZE] = {0};
 
-void* malloc(uint64_t wantedSize) {
+/*void* malloc(uint64_t wantedSize) {
 
-}
+}*/
