@@ -15,8 +15,8 @@ void drawStringInSpecificSpot(int x, int y, char* string, int fontColor, int bac
 // necesitamos almacenar todas las lineas, para asi poder moverlas todas hacia abajo
 static char screen[48][128];
 
-static unsigned int screen_width_in_characters;
-static unsigned int screen_height_in_characters;
+static unsigned int screen_width_in_characters = 1024 / CHAR_WIDTH;
+static unsigned int screen_height_in_characters = 768 / CHAR_HEIGHT;
 
 // we start writing at the top of the screen
 static int writing_line_width = 0;

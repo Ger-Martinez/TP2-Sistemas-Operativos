@@ -25,6 +25,8 @@ static void * const sampleDataModuleAddress = (void*)0x500000;
 
 typedef int (*EntryPoint)();
 
+extern void _hlt(void);
+
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
 	memset(bssAddress, 0, bssSize);
@@ -87,18 +89,11 @@ void * initializeKernelBinary() {
 int main() {
 
 	create_first_process((uint64_t)0x400000);
-
 	load_idt();
-	init_VM_Driver();
+	//init_VM_Driver();
 
-//static const int FONT_COLOR = 0xFFFFFF;
-//static const int BACKGROUND_COLOR = 0x000000;
-
-	char* a = malloc((uint64_t)100);
-	free(a);
-
-	while(1){             
-		((EntryPoint)sampleCodeModuleAddress)();
-	}
+	_hlt();
+	drawString("JAJAJAJA");
+	((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }

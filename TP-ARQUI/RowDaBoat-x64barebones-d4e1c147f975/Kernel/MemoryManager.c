@@ -169,7 +169,6 @@ static void heapInit() {
     freeBlockNode* firstFreeBlock;
     uint64_t *addrAlignedHeap = (void*) 0x600000;  // desde los 6 megas
     uint64_t uxAddress = 8600000; // hasta los 134 megas
-	drawString("entre a heapInit   ");
 
     /* freeListStart is used to hold a pointer to the first item in the list of free
 	blocks.  The void cast is used to prevent compiler warnings. */
