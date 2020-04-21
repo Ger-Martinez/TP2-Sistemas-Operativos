@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <screen_driver.h>
-#define NULL ((void*)0)
+#include "lib.h"  // for NULL constant
 
 /* Block sizes must not get too small. */
-#define heapMINIMUM_BLOCK_SIZE  512  // 0x200
+#define heapMINIMUM_BLOCK_SIZE  4096  // 4KB
 
 /* Keeps track of the number of calls to allocate and free memory as well as the
 number of free bytes remaining, but says nothing about fragmentation. */
@@ -26,29 +26,22 @@ static const uint16_t xHeapStructSize = sizeof(freeBlockNode);
 static freeBlockNode freeListStart, *freeListEnd = NULL;
 
 void* malloc(uint64_t wantedSize) {
+	if(wantedSize <= 0)
+		return NULL;
+	
     freeBlockNode *block1, *previousBlock, *newFreeBlock;
     void* returnAddress = NULL;
 	
     /* if this is the first call to malloc, then the heap has to be initialised with the list of free blocks */
-    if( freeListEnd == NULL ) {
+    if( freeListEnd == NULL )
         heapInit();
-    }
-    /* Check the requested block size is not so large that the top bit is
-	set.  The top bit of the block size member of the freeBlockNode structure
-	is used to determine who owns the block - the application or the
-	kernel, so it must be free. */
 
     /* The wanted size is increased so it can contain a freeBlockNode
 	structure in addition to the requested amount of bytes. */
-	if( wantedSize > 0 ) {
-		wantedSize += xHeapStructSize;
-	} else {
-		return NULL;
-	}
+	wantedSize += xHeapStructSize;
 
-    if( ( wantedSize > 0 ) && ( wantedSize <= freeBytesRemaining ) ) {
-		/* Traverse the list from the start	(lowest address) block until
-		one	of adequate size is found. */ /* aca se ve el First Fit */
+    if(wantedSize <= freeBytesRemaining) {
+		/* traverse the list until the FIRST big enough free block is found */
 		previousBlock = &freeListStart;
 		block1 = freeListStart.nextFreeBlock;
 		while( ( block1->blockSize < wantedSize ) && ( block1->nextFreeBlock != NULL ) ) {
@@ -56,8 +49,7 @@ void* malloc(uint64_t wantedSize) {
 			block1 = block1->nextFreeBlock;
 		}
 
-        /* If the end marker was reached then a block of adequate size
-		was	not found. */
+        /* If the end marker was reached then a block of adequate size was not found. */
 		if( block1 != freeListEnd ) {
 			/* Return the memory space pointed to - jumping over the
 			freeBlockNode structure at its start. */
@@ -168,7 +160,7 @@ static void prvInsertBlockIntoFreeList( freeBlockNode* blockToInsert ){
 static void heapInit() {
     freeBlockNode* firstFreeBlock;
     uint64_t *addrAlignedHeap = (void*) 0x600000;  // desde los 6 megas
-    uint64_t uxAddress = 8600000; // hasta los 134 megas
+    uint64_t uxAddress = 0x8600000; // hasta los 134 megas
 
     /* freeListStart is used to hold a pointer to the first item in the list of free
 	blocks.  The void cast is used to prevent compiler warnings. */

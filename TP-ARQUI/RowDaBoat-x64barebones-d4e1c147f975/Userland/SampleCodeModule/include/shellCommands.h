@@ -1,7 +1,7 @@
 #ifndef SHELL_COMMANDS_H
 #define SHELL_COMMANDS_H
 
-#define NUMBER_OF_COMMANDS 6
+#define NUMBER_OF_COMMANDS 7
 
 void execute_command(int command, char* parameter);
 
@@ -11,7 +11,8 @@ static char* all_commands[] =
 "exception0", 
 "exception6",
 "printmem",
-"showTime", 
+"showTime",
+"test"
 };
 
 #endif

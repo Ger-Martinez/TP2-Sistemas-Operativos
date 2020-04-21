@@ -32,9 +32,9 @@ configure_stack:
     push rbx      ; this value will be recovered by RDX
     mov rbx, 0x4
     push rbx      ; this value will be recovered by RBP
-    mov rbx, 0x5
+    mov rbx, 2    ;argc
     push rbx      ; this value will be recovered by RDI
-    mov rbx, 0x6
+    mov rbx, rdx  ;argv
     push rbx      ; this value will be recovered by RSI
     mov rbx, 0x7
     push rbx      ; this value will be recovered by R8

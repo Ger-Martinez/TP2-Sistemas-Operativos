@@ -3,6 +3,6 @@
 #ifndef PROCESS_MANAGER_H
 #define PROCESS_MANAGER_H
 
-void create_first_process(uint64_t RIP);
+uint8_t create_process(uint64_t RIP);
 
 #endif
