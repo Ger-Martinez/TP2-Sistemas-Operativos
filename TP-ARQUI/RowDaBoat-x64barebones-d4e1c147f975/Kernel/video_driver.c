@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <font.h>
-//#include <video_driver.h>
 #include <screen_driver.h>
 
 // PROBAR ESTO: cambiar los nombres de estas variables a minuscula

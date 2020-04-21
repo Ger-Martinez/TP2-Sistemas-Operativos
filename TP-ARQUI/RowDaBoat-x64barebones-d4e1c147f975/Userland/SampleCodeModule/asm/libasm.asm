@@ -1,5 +1,9 @@
 GLOBAL syscall_write
 GLOBAL syscall_read
+GLOBAL syscall_create_process
+GLOBAL syscall_malloc
+GLOBAL syscall_free
+GLOBAL syscall_getpid
 GLOBAL num_to_string
 
 section .bss
@@ -11,25 +15,17 @@ section .text
 syscall_write:
     push rbp
     mov rbp, rsp
-    push rax
     push rbx
     push rcx
-    push rdx
-    mov rax, 0
-    mov rbx, 0
-    mov rcx, 0
-    mov rdx, 0
 
-    mov rax, 4
-    mov rbx, 1
-    mov rcx, rdi ; le paso el string
-    mov rdx, rsi ; le paso la longitud del string
+    mov rax, 4    ; le paso el ID
+    mov rbx, 1    ; le paso el File Descriptor a escribir
+    mov rcx, rdi  ; le paso el string
     int 80h
+    mov rax, rax  ; syscall has a return value
 
-    pop rdx
     pop rcx
     pop rbx
-    pop rax
     mov rsp, rbp
     pop rbp
     ret
@@ -37,29 +33,110 @@ syscall_write:
 syscall_read:
     push rbp
     mov rbp, rsp
-    push rax
     push rbx
     push rcx
-    push rdx
-    mov rax, 0
-    mov rbx, 0
-    mov rcx, 0
-    mov rdx, 0
 
-    mov rax, 3
-    mov rbx, rdi  ; le paso el file_descriptor
+    mov rax, 3    ; le paso el ID
+    mov rbx, rdi  ; le paso "a donde quiero leer"
     mov rcx, rsi  ; le paso la direccion de donde tiene que guardar lo leido
-    mov rdx, rdx  ; le paso la cantidad de caracteres que tiene que leer
     int 80h
+    mov rax, rax  ; syscall has a return value
 
-    pop rdx
     pop rcx
     pop rbx
-    pop rax
     mov rsp, rbp
     pop rbp
     ret
 
+syscall_create_process:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+
+    mov rax, 2    ; le paso el ID
+    mov rbx, rdi  ; le paso la direccion a la que debe apuntar el RIP
+    mov rcx, 0    ; third argument has no value here
+    int 80h
+    mov rax, rax  ; syscall has a return value
+
+    pop rcx
+    pop rbx
+    mov rsp, rbp
+    pop rbp
+    ret
+
+syscall_malloc:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+
+    mov rax, 45   ; le paso el ID
+    mov rbx, rdi  ; le paso el tamaño deseado de memoria
+    mov rcx, 0    ; third argument has no value here
+    int 80h
+    mov rax, rax  ; syscall has a return value
+
+    pop rcx
+    pop rbx
+    mov rsp, rbp
+    pop rbp
+    ret
+
+syscall_free:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+
+    mov rax, 5    ; le paso el ID
+    mov rbx, rdi  ; le paso la direccion a ser liberada
+    mov rcx, 0    ; third argument has no value here
+    int 80h
+    mov rax, rax  ; syscall has a return value
+
+    pop rcx
+    pop rbx
+    mov rsp, rbp
+    pop rbp
+    ret
+
+syscall_getpid:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+
+    mov rax, 20    ; le paso el ID
+    mov rbx, rdi   ; le paso el pid_key para poder obtener el pid de este proceso
+    mov rcx, 0     ; third argument has no value here
+    int 80h
+    mov rax, rax   ; syscall has a return value
+
+    pop rcx
+    pop rbx
+    mov rsp, rbp
+    pop rbp
+    ret
+
+syscall_exit:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+
+    mov rax, 1    ; le paso el ID
+    mov rbx, 0    ; second argument has no value here
+    mov rcx, 0    ; third argument has no value here
+    int 80h
+    mov rax, rax  ; syscall has a return value
+
+    pop rcx
+    pop rbx
+    mov rsp, rbp
+    pop rbp
+    ret
 
 
 ; --------------------------------

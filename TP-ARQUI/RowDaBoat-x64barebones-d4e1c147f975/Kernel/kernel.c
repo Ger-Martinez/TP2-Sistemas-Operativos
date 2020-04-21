@@ -26,6 +26,7 @@ static void * const sampleDataModuleAddress = (void*)0x500000;
 typedef int (*EntryPoint)();
 
 extern void _hlt(void);
+extern void haltcpu(void);
 
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
@@ -88,12 +89,17 @@ void * initializeKernelBinary() {
 
 int main() {
 
-	create_first_process((uint64_t)0x400000);
+	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress);
+	if(first_process == 0) {
+		//FAIL
+		drawString("SHELL WAS NOT CREATED --> ABORT");
+		haltcpu();
+	}
 	load_idt();
 	//init_VM_Driver();
 
 	_hlt();
 	drawString("JAJAJAJA");
-	((EntryPoint)sampleCodeModuleAddress)();
+	//((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }

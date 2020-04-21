@@ -3,7 +3,7 @@
 #include "string.h"
 #include <stdint.h>
 
-#define SHELL_BUFFER_SIZE (128)+(128/2)  // 1 linea y media
+#define SHELL_BUFFER_SIZE ( (128)+(128/2) )  // 1 linea y media
 
 static void shell_main();
 static int search_command(char command_with_possible_parameter[], char* parameter);
