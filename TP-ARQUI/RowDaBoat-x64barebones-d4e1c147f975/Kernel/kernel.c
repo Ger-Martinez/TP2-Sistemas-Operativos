@@ -10,6 +10,7 @@
 
 #include "MemoryManager.h"   // BORRAR DESPUES
 #include "process_manager.h"  // este hay que dejarlo
+#include "buddy.h" // BORRAR DESPUES
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -89,9 +90,17 @@ void * initializeKernelBinary() {
 
 int main() {
 
+	/*void* a = buddy_MALLOC(4);
+	if(a == NULL) {
+		drawString("el primer malloc dio NULL\n");
+	}
+	void* b = buddy_MALLOC(1024 * 1024 *64);
+	if(b == NULL) {
+		drawString("el segundo malloc dio NULL\n");
+	}*/
+
 	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress);
 	if(first_process == 0) {
-		//FAIL
 		drawString("SHELL WAS NOT CREATED --> ABORT");
 		haltcpu();
 	}
@@ -103,3 +112,6 @@ int main() {
 	//((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }
+
+
+

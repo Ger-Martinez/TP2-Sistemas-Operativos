@@ -5,18 +5,18 @@
 
 #define SHELL_BUFFER_SIZE ( (128)+(128/2) )  // 1 linea y media
 
-static void shell_main();
+static void shell_main(uint8_t pid_key);
 static int search_command(char command_with_possible_parameter[], char* parameter);
 
 static char shell_buffer[SHELL_BUFFER_SIZE] = {'\0'};
 static uint8_t k = 0; // to move across the buffer
 
-void start_shell() {
+void start_shell(uint8_t pid_key) {
     print(">>");
-    shell_main();
+    shell_main(pid_key);
 }
 
-static void shell_main() {
+static void shell_main(uint8_t pid_key) {
     char c;
     int command;
     while(1) {
@@ -28,7 +28,7 @@ static void shell_main() {
                 char* parameter = "X";
                 command = search_command(shell_buffer, parameter);
                 if(command != -1)
-                    execute_command(command, parameter);
+                    execute_command(command, parameter, pid_key);
                 else
                     print("   Command not found");
                 putchar(c);  // print the '\n' to move to the next line

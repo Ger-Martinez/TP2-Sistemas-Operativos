@@ -10,7 +10,8 @@ char * descriptions[NUMBER_OF_COMMANDS] =
 "Verifica el funcionamiento de la rutina de excepcion de codigo de operacion invalido", 
 "Realiza un volcado de memoria de 32 bytes a partir de la direccion recibida como parametro", 
 "Imprime en pantalla la hora actual", 
-"hago un test"
+"hago un test",
+"imprime el estado de la memoria"
 };
 
 static void inforeg();
@@ -20,14 +21,17 @@ static void exception6();
 static void printmem(char* parameter);
 static void showTime();
 static void test();
+static void mem();
 
 extern uint64_t syscall_read(int, char*, int);
 extern uint64_t syscall_write(char*, int);
 extern uint64_t syscall_create_process(uint64_t);
 extern void* syscall_malloc(uint64_t);
 extern uint64_t syscall_free(void*);
+extern uint64_t syscall_memory_state(void);
+extern char* num_to_string(int number);
 
-void execute_command(int command, char* parameter) {
+void execute_command(int command, char* parameter, uint8_t pid_key) {
     switch(command){
         case 0:{
             inforeg();
@@ -57,11 +61,20 @@ void execute_command(int command, char* parameter) {
             test();
             break;
         }
+        case 7:{
+            mem();
+            break;
+        }
     }
 }
 
+static void mem() {
+    uint64_t free_memory = syscall_memory_state();
+    print( num_to_string(free_memory) );
+}
+
 static void test() {
-    void* a = syscall_malloc(4096);
+    /*void* a = syscall_malloc(4096);
     if(a == NULL) {
         print("ERROR in test: could not malloc address\n");
         return;
@@ -72,7 +85,7 @@ static void test() {
     }
     aa[10] = '\0';
     print(aa);
-    syscall_free(a);
+    syscall_free(a);*/
 }
 
 static void inforeg(){

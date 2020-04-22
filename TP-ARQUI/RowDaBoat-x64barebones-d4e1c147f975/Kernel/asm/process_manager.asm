@@ -32,9 +32,9 @@ configure_stack:
     push rbx      ; this value will be recovered by RDX
     mov rbx, 0x4
     push rbx      ; this value will be recovered by RBP
-    mov rbx, 2    ;argc
+    mov rbx, rdx  ;the only argument that EVERY process is gonna start with
     push rbx      ; this value will be recovered by RDI
-    mov rbx, rdx  ;argv
+    mov rbx, 0x6
     push rbx      ; this value will be recovered by RSI
     mov rbx, 0x7
     push rbx      ; this value will be recovered by R8

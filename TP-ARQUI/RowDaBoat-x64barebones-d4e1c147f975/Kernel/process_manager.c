@@ -31,10 +31,10 @@ uint8_t create_process(uint64_t RIP) {
             drawString("ERROR in create_process: could not malloc the stack size\n");
             return 0;
         }
-        //drawNumber((uint64_t*)first_process_stack_end, 0xFFFFFF, 0x000000); drawString("\n");
+        //drawNumber((uint64_t*)process_stack_end, 0xFFFFFF, 0x000000); drawString("\n");
 
         void* process_stack_start = (uint64_t)process_stack_end + FIXED_STACK_SIZE;
-        //drawNumber((uint64_t*)first_process_stack_start, 0xFFFFFF, 0x000000); drawString("\n");
+        //drawNumber((uint64_t*)process_stack_start, 0xFFFFFF, 0x000000); drawString("\n");
 
         uint8_t pid_key = get_pid_key();
 

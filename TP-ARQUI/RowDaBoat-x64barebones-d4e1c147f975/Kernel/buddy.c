@@ -38,7 +38,7 @@ void initialize() {
     bh->position = LEFT;
 }
 
-void * ultraMalloc (uint64_t bytesRequested) {
+void * buddy_MALLOC (uint64_t bytesRequested) {
 
     if (bytesRequested > TOTAL_HEAP_SIZE - sizeof(buddyHeader))
         return NULL;

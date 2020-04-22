@@ -86,6 +86,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
         uint8_t ret = configure_init_process();
         if(ret == 0) {
             drawString("ERROR in create_PCB_and_insert_it_on_scheduler_queue: could not create init process\n");
+            return 0;
         }
         first_call_to_create_PCB = 0;
     }

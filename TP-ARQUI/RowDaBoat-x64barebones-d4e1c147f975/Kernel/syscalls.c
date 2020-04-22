@@ -33,6 +33,8 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter)
             free((void*)second_parameter);
             return 0;
         }
+        case 6:
+            return mem_state();
         case 20:
             return getpid((uint8_t)second_parameter);
         default:{
