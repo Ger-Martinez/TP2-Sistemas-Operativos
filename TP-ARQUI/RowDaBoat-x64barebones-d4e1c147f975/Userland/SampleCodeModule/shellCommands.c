@@ -2,6 +2,7 @@
 #include "shellCommands.h"
 #include "string.h"
 #include <stdint.h>
+#include "test_mm.h"
 
 char * descriptions[NUMBER_OF_COMMANDS] = 
 { 
@@ -13,7 +14,8 @@ char * descriptions[NUMBER_OF_COMMANDS] =
 "Imprime en pantalla la hora actual", 
 "hago un test",
 "imprime el estado de la memoria",
-"mata a un proceso segun su PID"
+"mata a un proceso segun su PID",
+"TEST: test_mm prueba la Memory Manager"
 };
 
 static void inforeg();
@@ -71,6 +73,10 @@ void execute_command(int command, char* parameter, uint8_t pid_key) {
         }
         case 8:{
             kill(parameter);
+            break;
+        }
+        case 9:{
+            test_mm();
             break;
         }
     }

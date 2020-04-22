@@ -26,7 +26,7 @@ static const uint16_t xHeapStructSize = sizeof(freeBlockNode);
 static freeBlockNode freeListStart, *freeListEnd = NULL;
 
 void* free_list_MALLOC(uint64_t wantedSize) {
-	drawNumber(wantedSize, 0xFFFFFF, 0x000000);  drawString("   \n");
+	//drawNumber(wantedSize, 0xFFFFFF, 0x000000);  drawString("   \n");
 	if(wantedSize <= 0)
 		return NULL;
 	
