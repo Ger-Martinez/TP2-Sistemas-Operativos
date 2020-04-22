@@ -10,6 +10,6 @@ uint8_t get_pid_key();
 uint16_t getpid(uint8_t pid_key);
 void change_process_state_with_INDEX(uint8_t index, uint8_t state);
 uint64_t change_process_state_with_PID(uint16_t PID, uint8_t state);
-
+uint8_t get_state(uint16_t PID);
 
 #endif

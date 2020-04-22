@@ -15,7 +15,8 @@ char * descriptions[NUMBER_OF_COMMANDS] =
 "hago un test",
 "imprime el estado de la memoria",
 "mata a un proceso segun su PID",
-"TEST: test_mm prueba la Memory Manager"
+"TEST: test_mm prueba la Memory Manager",
+"bloquea otro proceso dado su PID"
 };
 
 static void inforeg();
@@ -27,6 +28,7 @@ static void showTime();
 static void test();
 static void mem();
 static void kill(char* PID);
+static void block(char* parameter);
 
 extern uint64_t syscall_read(int, char*, int);
 extern uint64_t syscall_write(char*, int);
@@ -36,6 +38,7 @@ extern uint64_t syscall_free(void*);
 extern uint64_t syscall_memory_state(void);
 extern uint64_t syscall_kill(uint16_t PID);
 extern char* num_to_string(int number);
+extern uint64_t syscall_block(uint16_t PID);
 
 void execute_command(int command, char* parameter, uint8_t pid_key) {
     switch(command){
@@ -79,6 +82,55 @@ void execute_command(int command, char* parameter, uint8_t pid_key) {
             test_mm();
             break;
         }
+        case 10:{
+            block(parameter);
+            break;
+        }
+    }
+}
+
+#include "procesoA.h"
+#include "procesoB.h"
+
+void ejecutarA(uint8_t pid_key) {
+    print("pid_key from PROCESS A = ");
+    print(num_to_string(pid_key));
+    print_a();
+}
+
+void ejecutarB(uint8_t pid_key) {
+    print("pid_key from PROCESS B = ");
+    print(num_to_string(pid_key));
+    print_b();
+}
+
+static void block(char* PID) {
+    if(strcmp(PID, "X") == 0) {
+        print("  ERROR: debe elegir a que proceso bloquear");
+        return;
+    }
+    uint16_t PID_number = string_to_num(PID);
+    if(PID_number == 1) {
+        print("ERROR: cannot block INIT process");
+        return;
+    } else if(PID_number == 2) {
+        print("ERROR: cannot block SHELL process");
+        return;
+    }
+    else{
+
+        void (*aa)(uint8_t);
+        aa = ejecutarA;
+        void (*bb)(uint8_t);
+        bb = ejecutarB;
+        syscall_create_process((uint64_t)aa);
+        syscall_create_process((uint64_t)bb);
+
+        uint64_t ret = syscall_block(PID_number);
+        if(ret == 1) {
+            print("ERROR: no se pudo cambiar el estado del proceso con PID = ");
+            print(PID);
+        }
     }
 }
 
@@ -109,19 +161,15 @@ static void mem() {
     print( num_to_string(free_memory) );
 }
 
+
+
 static void test() {
-    /*void* a = syscall_malloc(4096);
-    if(a == NULL) {
-        print("ERROR in test: could not malloc address\n");
-        return;
-    }
-    char* aa = (char*) a;
-    for(int i=0; i<4096; i++) {
-        aa[i] = 'c';
-    }
-    aa[10] = '\0';
-    print(aa);
-    syscall_free(a);*/
+    void (*aa)(uint8_t);
+    aa = ejecutarA;
+    void (*bb)(uint8_t);
+    bb = ejecutarB;
+    syscall_create_process((uint64_t)aa);
+    syscall_create_process((uint64_t)bb);
 }
 
 static void inforeg(){

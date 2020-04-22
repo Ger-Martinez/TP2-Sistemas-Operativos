@@ -43,6 +43,8 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter)
             exit_process(second_parameter);
             return 0;  // the CPU will never get to this return
         }
+        case 7:
+            return negate_state(second_parameter);
         default:{
             // we just add this to keep warnings quiet
             return 0;

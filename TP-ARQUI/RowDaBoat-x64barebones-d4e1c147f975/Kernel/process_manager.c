@@ -62,3 +62,14 @@ void exit_process(uint8_t pid_key) {
 uint64_t kill_process(uint16_t PID) {
     return change_process_state_with_PID(PID, DEAD);
 }
+
+uint64_t negate_state(uint16_t PID) {
+    if(get_state(PID) == 1)
+        return 1;
+
+    if(get_state(PID) == READY)
+        change_process_state_with_PID(PID, BLOCKED);
+    else if(get_state(PID) == BLOCKED)
+        change_process_state_with_PID(PID, READY);
+    return 0;
+}
