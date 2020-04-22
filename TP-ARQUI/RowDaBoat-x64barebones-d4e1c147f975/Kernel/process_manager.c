@@ -1,6 +1,7 @@
 #include "MemoryManager.h"
 #include "scheduler.h"
 #include <screen_driver.h>
+#include "process_manager.h"
 #include "lib.h"  // for NULL constant
 #define FIXED_STACK_SIZE 4096  // 4KB, coincide con la constante en buddy.c
 #define MAX_NUMBER_OF_PROCESSES 30
@@ -8,6 +9,7 @@
 #define PROCESS_NOT_EXISTS 0
 
 extern uint64_t configure_stack(uint64_t, uint64_t, uint8_t);
+extern void _hlt();
 
 static uint8_t processes[MAX_NUMBER_OF_PROCESSES] = {PROCESS_NOT_EXISTS};
 static uint8_t number_of_free_processes = MAX_NUMBER_OF_PROCESSES;
@@ -50,4 +52,13 @@ uint8_t create_process(uint64_t RIP) {
         }
         return 1;
     }
+}
+
+void exit_process(uint8_t pid_key) {
+    change_process_state_with_INDEX(pid_key, DEAD);
+    _hlt();
+}
+
+uint64_t kill_process(uint16_t PID) {
+    return change_process_state_with_PID(PID, DEAD);
 }

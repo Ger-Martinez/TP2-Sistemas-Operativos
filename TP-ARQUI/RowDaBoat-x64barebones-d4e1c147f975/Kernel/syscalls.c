@@ -33,10 +33,16 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter)
             free((void*)second_parameter);
             return 0;
         }
+        case 37:
+            return kill_process(second_parameter);
         case 6:
             return mem_state();
         case 20:
             return getpid((uint8_t)second_parameter);
+        case 1:{
+            exit_process(second_parameter);
+            return 0;  // the CPU will never get to this return
+        }
         default:{
             // we just add this to keep warnings quiet
             return 0;

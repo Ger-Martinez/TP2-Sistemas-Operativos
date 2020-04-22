@@ -2,11 +2,7 @@
 #include "MemoryManager.h"
 #include <time.h>
 #include <screen_driver.h>
-#define DEAD 0
-#define READY 1
-#define BLOCKED 2
-#define RUNNING 3  /* no se si hace falta... despues vemos si lo sacamos */
-#define MAX_NUMBER_OF_PROCESSES 30  /* esto se puede ir cambiando */
+#include "process_manager.h"
 #define NULL ((void*)0)
 
 uint64_t choose_next_process();
@@ -144,16 +140,18 @@ uint16_t getpid(uint8_t pid_key) {
     return all_blocks[pid_key].PID;
 }
 
-/*void list_all_PBC_array() {
+void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
+    all_blocks[index].state = state;
+}
+
+uint64_t change_process_state_with_PID(uint16_t PID, uint8_t state) {
     for(int i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
-        if(all_blocks[i].state == DEAD) {
-            drawString("state = DEAD\n");
-        } else {
-            drawString("   ");
-            drawNumber(all_blocks[i].state, 0xFFFFFF, 0x000000);
-            drawString("   ");
-            drawNumber(all_blocks[i].stackPointer, 0xFFFFFF, 0x000000);
-            drawString("   ");
+        if(all_blocks[i].state != DEAD) {
+            if(all_blocks[i].PID == PID) {
+                all_blocks[i].state = state;
+                return 0;
+            }
         }
     }
-}*/
+    return 1;
+}

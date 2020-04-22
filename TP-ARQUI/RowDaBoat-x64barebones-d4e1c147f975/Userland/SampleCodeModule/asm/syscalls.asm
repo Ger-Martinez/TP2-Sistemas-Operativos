@@ -5,6 +5,8 @@ GLOBAL syscall_malloc
 GLOBAL syscall_free
 GLOBAL syscall_getpid
 GLOBAL syscall_memory_state
+GLOBAL syscall_exit
+GLOBAL syscall_kill
 
 section .text
 
@@ -123,7 +125,25 @@ syscall_exit:
     push rcx
 
     mov rax, 1    ; le paso el ID
-    mov rbx, 0    ; second argument has no value here
+    mov rbx, rdi  ; second argument: pid_key
+    mov rcx, 0    ; third argument has no value here
+    int 80h
+    mov rax, rax  ; syscall has a return value
+
+    pop rcx
+    pop rbx
+    mov rsp, rbp
+    pop rbp
+    ret
+
+syscall_kill:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rcx
+
+    mov rax, 37    ; le paso el ID
+    mov rbx, rdi  ; second argument: PID
     mov rcx, 0    ; third argument has no value here
     int 80h
     mov rax, rax  ; syscall has a return value

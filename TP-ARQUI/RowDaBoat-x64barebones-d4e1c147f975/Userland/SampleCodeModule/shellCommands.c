@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "shellCommands.h"
+#include "string.h"
 #include <stdint.h>
 
 char * descriptions[NUMBER_OF_COMMANDS] = 
@@ -11,7 +12,8 @@ char * descriptions[NUMBER_OF_COMMANDS] =
 "Realiza un volcado de memoria de 32 bytes a partir de la direccion recibida como parametro", 
 "Imprime en pantalla la hora actual", 
 "hago un test",
-"imprime el estado de la memoria"
+"imprime el estado de la memoria",
+"mata a un proceso segun su PID"
 };
 
 static void inforeg();
@@ -22,6 +24,7 @@ static void printmem(char* parameter);
 static void showTime();
 static void test();
 static void mem();
+static void kill(char* PID);
 
 extern uint64_t syscall_read(int, char*, int);
 extern uint64_t syscall_write(char*, int);
@@ -29,6 +32,7 @@ extern uint64_t syscall_create_process(uint64_t);
 extern void* syscall_malloc(uint64_t);
 extern uint64_t syscall_free(void*);
 extern uint64_t syscall_memory_state(void);
+extern uint64_t syscall_kill(uint16_t PID);
 extern char* num_to_string(int number);
 
 void execute_command(int command, char* parameter, uint8_t pid_key) {
@@ -45,7 +49,7 @@ void execute_command(int command, char* parameter, uint8_t pid_key) {
             exception0();
             break;
         }
-        case 3/*****************/:{
+        case 3:{
             exception6();
             break;
         }
@@ -65,10 +69,36 @@ void execute_command(int command, char* parameter, uint8_t pid_key) {
             mem();
             break;
         }
+        case 8:{
+            kill(parameter);
+            break;
+        }
+    }
+}
+
+static void kill(char* PID) {
+    if(strcmp(PID, "X") == 0) {
+        print("  ERROR: Debe pasarse un PID como parametro");
+    } 
+    else if(strcmp(PID, "1") == 0) {
+        print("  ERROR: cannot kill INIT process");
+    } 
+    else if(strcmp(PID, "2") == 0) {
+        print("  ERROR: cannot kill SHELL process");
+    } 
+    else {
+        uint16_t PID_number = string_to_num(PID);
+        int ret = syscall_kill(PID_number);
+        if(ret == 1) {
+            print("  ERROR: could no kill process with PID = ");
+            print(PID);
+            print(", because it does NOT EXIST");
+        }
     }
 }
 
 static void mem() {
+    print("  BYTES REMAINING FOR ALLOCATION: ");
     uint64_t free_memory = syscall_memory_state();
     print( num_to_string(free_memory) );
 }
