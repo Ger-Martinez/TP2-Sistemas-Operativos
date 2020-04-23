@@ -15,7 +15,7 @@ char * descriptions[NUMBER_OF_COMMANDS] =
 "hago un test",
 "imprime el estado de la memoria",
 "mata a un proceso segun su PID",
-"TEST: test_mm prueba la Memory Manager",
+"TEST: test_mm prueba la Memory Manager", 
 "bloquea otro proceso dado su PID"
 };
 

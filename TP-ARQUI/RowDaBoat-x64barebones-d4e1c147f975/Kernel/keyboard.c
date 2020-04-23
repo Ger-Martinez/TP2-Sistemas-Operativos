@@ -1,5 +1,7 @@
 #include <keyboard.h>
 #include <stdint.h>
+#include "process_manager.h"
+#include "scheduler.h"
 
 extern int getKey(void);
 static char get_letter_code(void);
@@ -34,6 +36,7 @@ void keyboard_handler(void){
         // no añado nada al buffer ya que el teclado no me dio ninguna tecla nueva
         return;
     }
+    change_process_state_with_INDEX(get_foreground_process(), READY);
     buffer = letra;  // añado la letra al buffer
 }
 

@@ -25,7 +25,7 @@ static void shell_main(uint8_t pid_key) {
             if(c == '\n') {
                 putchar(c);     // print the '\n' to move to the next line
                 shell_buffer[k++] = '\0';
-                char* parameter = "X";
+                char* parameter = "X"; 
                 uint8_t background = 0;
                 command = search_command(shell_buffer, parameter, &background);
                 if(command != -1)

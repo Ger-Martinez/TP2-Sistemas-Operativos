@@ -32,6 +32,9 @@ static uint16_t pid_number = 1;
 static uint8_t current = 0;
 static uint8_t init_was_called = 0;
 
+static uint8_t foreground_process = 0;
+
+
 uint64_t schedule_processes(uint64_t previous_process_SP) {
     timer_handler();  // el handler de Timer Tick del TP de arqui sigue estando
 
@@ -176,4 +179,8 @@ uint8_t get_state(uint16_t PID) {
         }
     }
     return 1;
+}
+
+uint8_t get_foreground_process() {
+    return foreground_process;
 }

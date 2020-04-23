@@ -6,6 +6,7 @@
 #define DEAD 3
 #define READY 4
 #define BLOCKED 5
+#define BLOCKED_READING 6
 // #define RUNNING 3  /* no se si hace falta... despues vemos si lo sacamos */
 #define MAX_NUMBER_OF_PROCESSES 30  /* esto se puede ir cambiando */
 
