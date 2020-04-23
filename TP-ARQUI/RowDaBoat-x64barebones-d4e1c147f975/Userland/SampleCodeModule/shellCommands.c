@@ -25,14 +25,13 @@ static void exception0();
 static void exception6();
 static void printmem(char* parameter);
 static void showTime();
-static void test();
+static void test(int background, uint8_t pid_key);
 static void mem();
 static void kill(char* PID);
 static void block(char* parameter);
 
 extern uint64_t syscall_read(int, char*, int);
-extern uint64_t syscall_write(char*, int);
-extern uint64_t syscall_create_process(uint64_t);
+extern uint64_t syscall_create_process(uint64_t, int, uint8_t);
 extern void* syscall_malloc(uint64_t);
 extern uint64_t syscall_free(void*);
 extern uint64_t syscall_memory_state(void);
@@ -40,7 +39,7 @@ extern uint64_t syscall_kill(uint16_t PID);
 extern char* num_to_string(int number);
 extern uint64_t syscall_block(uint16_t PID);
 
-void execute_command(int command, char* parameter, uint8_t pid_key) {
+void execute_command(int command, char* parameter, uint8_t pid_key, int background) {
     switch(command){
         case 0:{
             inforeg();
@@ -67,7 +66,7 @@ void execute_command(int command, char* parameter, uint8_t pid_key) {
             break;
         }
         case 6:{
-            test();
+            test(background, pid_key);
             break;
         }
         case 7:{
@@ -101,7 +100,7 @@ void ejecutarA(uint8_t pid_key) {
 void ejecutarB(uint8_t pid_key) {
     print("pid_key from PROCESS B = ");
     print(num_to_string(pid_key));
-    print_b();
+    print_b(pid_key);
 }
 
 static void block(char* PID) {
@@ -118,14 +117,6 @@ static void block(char* PID) {
         return;
     }
     else{
-
-        void (*aa)(uint8_t);
-        aa = ejecutarA;
-        void (*bb)(uint8_t);
-        bb = ejecutarB;
-        syscall_create_process((uint64_t)aa);
-        syscall_create_process((uint64_t)bb);
-
         uint64_t ret = syscall_block(PID_number);
         if(ret == 1) {
             print("ERROR: no se pudo cambiar el estado del proceso con PID = ");
@@ -161,15 +152,18 @@ static void mem() {
     print( num_to_string(free_memory) );
 }
 
-
-
-static void test() {
-    void (*aa)(uint8_t);
-    aa = ejecutarA;
+static void test(int background, uint8_t pid_key) {
     void (*bb)(uint8_t);
     bb = ejecutarB;
-    syscall_create_process((uint64_t)aa);
-    syscall_create_process((uint64_t)bb);
+    uint64_t ret = syscall_create_process((uint64_t)bb, background, pid_key);
+    if(ret == 1) {
+        print("ERROR in syscall create_process");
+    }
+
+    //void (*aa)(uint8_t);
+    //aa = ejecutarA;
+    //syscall_create_process((uint64_t)aa);
+    
 }
 
 static void inforeg(){

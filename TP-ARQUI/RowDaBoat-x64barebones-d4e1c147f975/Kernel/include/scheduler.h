@@ -1,7 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress);
+uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress, uint8_t background, uint8_t pid_key);
 
 uint64_t schedule_processes(uint64_t previous_process_SP);
 // no se si aca deberia ir la funcion schedule_process, ya que esta funcion se la llama desde un assembler

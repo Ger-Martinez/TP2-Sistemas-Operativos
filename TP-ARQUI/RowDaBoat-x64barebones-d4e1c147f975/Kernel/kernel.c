@@ -99,8 +99,8 @@ int main() {
 		drawString("el segundo malloc dio NULL\n");
 	}*/
 
-	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress);
-	if(first_process == 0) {
+	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0);
+	if(first_process == 1) {
 		drawString("SHELL WAS NOT CREATED --> ABORT");
 		haltcpu();
 	}

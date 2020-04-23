@@ -4,7 +4,7 @@
 #define NUMBER_OF_COMMANDS 11
 #include <stdint.h>
 
-void execute_command(int command, char* parameter, uint8_t pid_key);
+void execute_command(int command, char* parameter, uint8_t pid_key, int background);
 
 static char* all_commands[] = 
 {"inforeg", 

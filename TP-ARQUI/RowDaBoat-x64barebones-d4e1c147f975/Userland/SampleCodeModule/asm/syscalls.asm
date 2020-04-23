@@ -55,7 +55,8 @@ syscall_create_process:
 
     mov rax, 2    ; le paso el ID
     mov rbx, rdi  ; le paso la direccion a la que debe apuntar el RIP
-    mov rcx, 0    ; third argument has no value here
+    mov rcx, rsi  ; le paso si es de FG o BG
+    mov rdx, rdx  ; le paso el pid_key para que este proceso pueda bloquearse, en caso que se cree un proceso en FG
     int 80h
     mov rax, rax  ; syscall has a return value
 
@@ -129,7 +130,6 @@ syscall_exit:
     mov rbx, rdi  ; second argument: pid_key
     mov rcx, 0    ; third argument has no value here
     int 80h
-    mov rax, rax  ; syscall has a return value
 
     pop rcx
     pop rbx

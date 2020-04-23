@@ -19,14 +19,14 @@ static uint64_t write_syscall(int file_descriptor, char* string);
 static uint64_t read_syscall(int where_to_read, char* where_to_store);
 
 
-uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter) {
+uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter, int fourth_parameter) {
     switch(ID){
         case 4:
             return write_syscall(second_parameter, third_parameter);
         case 3:
             return read_syscall(second_parameter, third_parameter);
         case 2:
-            return create_process((uint64_t)second_parameter);
+            return create_process((uint64_t)second_parameter, (uint8_t)third_parameter, (uint8_t)fourth_parameter);
         case 45:
             return ( (uint64_t) malloc((uint64_t)second_parameter) );
         case 5:{
