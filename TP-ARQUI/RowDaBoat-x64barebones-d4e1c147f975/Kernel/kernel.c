@@ -89,7 +89,7 @@ void * initializeKernelBinary() {
 }
 
 int main() {
-
+	
 	/*void* a = buddy_MALLOC(4);
 	if(a == NULL) {
 		drawString("el primer malloc dio NULL\n");

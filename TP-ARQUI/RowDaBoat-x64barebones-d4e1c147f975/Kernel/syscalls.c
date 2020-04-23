@@ -15,6 +15,7 @@
 extern int segundos();
 extern int minutos();
 extern int horas();
+extern void _hlt(void);
 static uint64_t write_syscall(int file_descriptor, char* string);
 static uint64_t read_syscall(int where_to_read, char* where_to_store);
 
@@ -68,15 +69,12 @@ static uint64_t write_syscall(int file_descriptor, char* string) {
 static uint64_t read_syscall(int where_to_read, char* where_to_store) {
     switch(where_to_read){
         case STD_INPUT:{  // read from the keyboard buffer
-            // where_to_store[0] = get_keyboard_buffer();
-            
-            // return (where_to_store[0] != -1)? 1 : 0;
-
-            change_process_state_with_INDEX(get_foreground_process(), BLOCKED_READING);
-            _hlt();
+            if(get_keyboard_buffer() == -1) {
+                change_process_state_with_INDEX(get_foreground_process(), BLOCKED_READING);
+                _hlt();
+            }
             where_to_store[0] = get_keyboard_buffer();
-            return 0;
-            
+            return 0; 
         }
         case RTC:{
             int seg = segundos();

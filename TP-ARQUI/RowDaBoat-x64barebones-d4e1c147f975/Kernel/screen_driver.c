@@ -136,7 +136,6 @@ static void clearChar(int x, int y) {
 
 void drawString(char* string) {
     for(int i=0; i<strlen(string); i++){
-        //drawStringInSpecificSpot(100+(2*i), 100, "drawString escribio un caracter", 0x000000, 0xFFFFFF);
         drawChar(string[i], FONT_COLOR, BACKGROUND_COLOR);
     }
 }
@@ -193,7 +192,7 @@ void drawNumberInSpecificSpot(int x, int y, int number, int fontColor, int backg
     int aux_x = x;
     for(int i=0; i<number_length; i++) {
         drawCharInSpecificSpot(aux_x, y, number_converted[i], fontColor, backgroundColor);
-        aux_x += CHAR_WIDTH;
+        //aux_x += CHAR_WIDTH;
     }
 }
 

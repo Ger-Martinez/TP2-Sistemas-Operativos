@@ -34,7 +34,7 @@ uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
     
         uint8_t ret = create_PCB_and_insert_it_on_scheduler_queue(new_stack_address, background, pid_key);
         if(ret == 1) {
-            //drawString("ERROR in create_process: could not create PCB\n");
+            drawString("ERROR in create_process: could not create PCB\n");
             free(process_stack_end);
             return 1;
         }

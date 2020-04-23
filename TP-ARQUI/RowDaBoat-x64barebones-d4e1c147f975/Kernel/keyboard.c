@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "process_manager.h"
 #include "scheduler.h"
+#include "screen_driver.h"
 
 extern int getKey(void);
 static char get_letter_code(void);
@@ -31,6 +32,7 @@ static char map_shift[] = {'\0', '\0'/*esc*/, '!', '@', '#', '$', '%', '^', '&',
 static char buffer = -1;
 
 void keyboard_handler(void){
+    //drawString("h");
     char letra = get_letter_code();
     if(letra == -1) {
         // no añado nada al buffer ya que el teclado no me dio ninguna tecla nueva
