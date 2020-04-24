@@ -13,5 +13,6 @@ uint64_t change_process_state_with_PID(uint16_t PID, uint8_t state);
 uint8_t get_state(uint16_t PID);
 
 uint8_t get_foreground_process();
+uint64_t ps(void);
 
 #endif

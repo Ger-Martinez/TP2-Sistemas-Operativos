@@ -26,7 +26,6 @@ static PCB all_blocks[MAX_NUMBER_OF_PROCESSES];
 
 static uint8_t first_call_to_scheduler = 1;
 static uint8_t first_call_to_create_PCB = 1;
-static uint8_t first_call_to_init = 1;
 
 static uint16_t pid_number = 1;
 
@@ -82,7 +81,7 @@ uint64_t choose_next_process(uint64_t previous_process_SP) {
     return SP_to_return;
 }
 
-uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress, uint8_t background, uint8_t pid_key) {
+uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress, uint8_t background, uint8_t parent_pid_key) {
     if(first_call_to_create_PCB) {
         for (int i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
             all_blocks[i].state = DEAD;
@@ -102,8 +101,6 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
             break;
         }
     }
-    drawString("creo PCB en la posisicion del vector = "); drawNumber(i, 0xFFFFFF, 0x000000);
-    drawString("\n");
 
     if(i < MAX_NUMBER_OF_PROCESSES) {
         all_blocks[i].state = READY;
@@ -113,13 +110,16 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
         if(first_call_to_create_PCB)
             all_blocks[i].son_of_PID = 1;
         else
-            all_blocks[i].son_of_PID = all_blocks[pid_key].PID;
+            all_blocks[i].son_of_PID = all_blocks[parent_pid_key].PID;
+        first_call_to_create_PCB = 0;
         if(background == 0) {
             // we must block the process that executed the create_process syscall
-            all_blocks[pid_key].state = BLOCKED;
+            all_blocks[parent_pid_key].state = BLOCKED;
+            drawNumber(parent_pid_key, 0xFFFFFF, 0x000000);
+            foreground_process = i;
+            drawString("-th process will be blocked because it has created a FG process\n");
             _hlt();
         }
-        first_call_to_create_PCB = 0;
         return 0;
     } else {
         drawString("ERROR in create_PCB_and_insert_it_on_scheduler_queue: no more PCBs available\n");
@@ -135,14 +135,18 @@ static void execute_init() {
 
 static uint8_t configure_init_process(){
     void* init_stack_end = malloc(INIT_STACK_SIZE);
+    drawString("start of init = "); drawNumber((uint64_t)init_stack_end, 0xFFFFFF, 0x000000);
     if(init_stack_end == NULL) {
         drawString("ERROR in configure_init_process: could not malloc stack size\n");
         return 1;
     }
-    void* init_stack_start = (uint64_t)init_stack_end + INIT_STACK_SIZE;
+    void* init_stack_start = init_stack_end + INIT_STACK_SIZE;
+    drawString("  end of init = "); drawNumber((uint64_t)init_stack_start, 0xFFFFFF, 0x000000);
     void (*init_code)(void);
     init_code = execute_init;
     uint64_t init_stack_address = configure_stack((uint64_t)init_stack_start, init_code);
+    drawString("  INIT REAL STACK = "); drawNumber(init_stack_address, 0xFFFFFF, 0x000000);
+    drawString("\n");
     init.stackPointer = init_stack_address;
     init.PID = pid_number;
     pid_number++;
@@ -166,7 +170,22 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
     all_blocks[index].state = state;
     if(state == DEAD) {
         // it means that a process executed an exit()
-        all_blocks[ all_blocks[index].son_of_PID ].state = READY;
+        uint16_t PID_of_parent = all_blocks[index].son_of_PID;
+        uint8_t i;
+        for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
+            if(all_blocks[i].PID == PID_of_parent) {
+                if(foreground_process == index) {
+                    all_blocks[i].state = READY;
+                    foreground_process = i;
+                    break;
+                }
+                /*if(all_blocks[i].state != BLOCKED && all_blocks[i].state != BLOCKED_READING){
+                    all_blocks[i].state = READY;
+                    foreground_process = i;
+                }
+                break;*/
+            }
+        }
     }
 }
 
@@ -191,4 +210,45 @@ uint8_t get_state(uint16_t PID) {
 
 uint8_t get_foreground_process() {
     return foreground_process;
+}
+
+uint64_t ps(void) {
+    drawString("PID        STATE        ¿FG?        RSP        CHILD OF\n");
+    drawNumber(init.PID, 0xFFFFFF, 0x000000);
+    drawString("           READY        NO        ");
+    drawNumber(init.stackPointer, 0xFFFFFF, 0x000000);
+    drawString("       ----\n");
+    for(int i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
+        if(all_blocks[i].state != DEAD) {
+            drawNumber(all_blocks[i].PID, 0xFFFFFF, 0x000000);
+            drawString("           ");
+            switch(all_blocks[i].state){
+                case BLOCKED:{
+                    drawString("BLOCKED     "); 
+                    break;
+                }
+                case READY:{
+                    drawString("READY       ");
+                    break;
+                }
+                case BLOCKED_READING:{
+                    drawString("READING     ");
+                    break;
+                }
+                default:{
+                    drawString("IMPOSIBLE   ");
+                    break;
+                }
+            }
+            if(i == foreground_process)
+                drawString("YES        ");
+            else
+                drawString("NO         ");
+            drawNumber(all_blocks[i].stackPointer, 0xFFFFFF, 0x000000);
+            drawString("        ");
+            drawNumber(all_blocks[i].son_of_PID, 0xFFFFFF, 0x000000);
+            drawString("\n");
+        }
+    }
+    return 0;
 }

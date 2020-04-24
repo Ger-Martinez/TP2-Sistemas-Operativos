@@ -192,7 +192,7 @@ void drawNumberInSpecificSpot(int x, int y, int number, int fontColor, int backg
     int aux_x = x;
     for(int i=0; i<number_length; i++) {
         drawCharInSpecificSpot(aux_x, y, number_converted[i], fontColor, backgroundColor);
-        //aux_x += CHAR_WIDTH;
+        aux_x += CHAR_WIDTH;
     }
 }
 

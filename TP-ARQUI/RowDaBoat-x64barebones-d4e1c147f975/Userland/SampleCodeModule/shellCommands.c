@@ -16,7 +16,9 @@ char * descriptions[NUMBER_OF_COMMANDS] =
 "imprime el estado de la memoria",
 "mata a un proceso segun su PID",
 "TEST: test_mm prueba la Memory Manager", 
-"bloquea otro proceso dado su PID"
+"bloquea otro proceso dado su PID",
+"lista todos los procesos existentes",
+"imprime un saludo cada algunos segundos"
 };
 
 static void inforeg();
@@ -29,6 +31,9 @@ static void test(int background, uint8_t pid_key);
 static void mem();
 static void kill(char* PID);
 static void block(char* parameter);
+static void testing_mm(uint8_t background, uint8_t pid_key);
+static void ps(void);
+static void loop(uint8_t background, uint8_t pid_key);
 
 extern uint64_t syscall_read(int, char*, int);
 extern uint64_t syscall_create_process(uint64_t, int, uint8_t);
@@ -38,6 +43,8 @@ extern uint64_t syscall_memory_state(void);
 extern uint64_t syscall_kill(uint16_t PID);
 extern char* num_to_string(int number);
 extern uint64_t syscall_block(uint16_t PID);
+extern void syscall_ps(void);
+extern uint16_t syscall_getpid(uint8_t pid_key);
 
 void execute_command(int command, char* parameter, uint8_t pid_key, int background) {
     switch(command){
@@ -78,30 +85,37 @@ void execute_command(int command, char* parameter, uint8_t pid_key, int backgrou
             break;
         }
         case 9:{
-            test_mm();
+            testing_mm(background, pid_key);
             break;
         }
         case 10:{
             block(parameter);
             break;
         }
+        case 11:{
+            ps();
+            break;
+        }
+        case 12:{
+            loop(background, pid_key);
+            break;
+        }
     }
 }
 
-#include "procesoA.h"
-#include "procesoB.h"
-
-void ejecutarA(uint8_t pid_key) {
-    print("pid_key from PROCESS A = ");
-    print(num_to_string(pid_key));
-    print_a();
+static void ps() {
+    syscall_ps();
 }
 
-void ejecutarB(uint8_t pid_key) {
-    print("pid_key from PROCESS B = ");
-    print(num_to_string(pid_key));
-    print_b(pid_key);
+static void testing_mm(uint8_t background, uint8_t pid_key) {
+    void (*p)(void);
+    p = test_mm;
+    int ret = syscall_create_process((uint64_t)p, background, pid_key);
+    if(ret == 1) {
+        print("ERROR: could not create process \"test_mm\"\n");
+    }
 }
+
 
 static void block(char* PID) {
     if(strcmp(PID, "X") == 0) {
@@ -150,20 +164,39 @@ static void mem() {
     print("  BYTES REMAINING FOR ALLOCATION: ");
     uint64_t free_memory = syscall_memory_state();
     print( num_to_string(free_memory) );
+    print("\n");
 }
 
 static void test(int background, uint8_t pid_key) {
-    void (*bb)(uint8_t);
-    bb = ejecutarB;
-    uint64_t ret = syscall_create_process((uint64_t)bb, background, pid_key);
-    if(ret == 1) {
-        print("ERROR in syscall create_process");
-    }
+    mem();
+    void* a = syscall_malloc(9999999);
+    void* b = syscall_malloc(9999999);
+    mem();
+    int aa = syscall_free(a); if(aa==1){print("FREE fallo\n");} 
+    mem();
+    int bb = syscall_free(b); if(bb==1){print("FREE fallo\n");}
+    mem();
+}
 
-    //void (*aa)(uint8_t);
-    //aa = ejecutarA;
-    //syscall_create_process((uint64_t)aa);
-    
+static void loop_command(uint8_t pid_key) {
+    uint64_t count = 0;
+    uint16_t pid = syscall_getpid(pid_key);
+    while(1) {
+        count++;
+        if(count % 100000000 == 0) {
+            count = 1;
+            print( num_to_string( pid ) );
+        }
+    }
+}
+
+static void loop(uint8_t background, uint8_t pid_key) {
+    void (*foo)(uint8_t);
+    foo = loop_command;
+    int ret = syscall_create_process((uint64_t)foo, background, pid_key);
+    if(ret == 1) {
+        print("ERROR: No se pudo crear el proceso para el comando loop\n");
+    }
 }
 
 static void inforeg(){

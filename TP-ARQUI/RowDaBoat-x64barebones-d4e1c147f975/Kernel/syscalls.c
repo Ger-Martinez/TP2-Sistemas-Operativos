@@ -30,10 +30,8 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter,
             return create_process((uint64_t)second_parameter, (uint8_t)third_parameter, (uint8_t)fourth_parameter);
         case 45:
             return ( (uint64_t) malloc((uint64_t)second_parameter) );
-        case 5:{
-            free((void*)second_parameter);
-            return 0;
-        }
+        case 5:
+            return free((void*)second_parameter);
         case 37:
             return kill_process(second_parameter);
         case 6:
@@ -46,6 +44,8 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter,
         }
         case 7:
             return negate_state(second_parameter);
+        case 8:
+            return ps();
         default:{
             // we just add this to keep warnings quiet
             return 0;

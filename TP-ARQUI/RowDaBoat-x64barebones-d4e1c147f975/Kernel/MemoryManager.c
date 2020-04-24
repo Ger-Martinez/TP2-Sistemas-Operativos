@@ -9,7 +9,7 @@ void* malloc(uint64_t wantedSize) {
     //return buddy_MALLOC(wantedSize);
 }
 
-void free(void* address) {
+uint8_t free(void* address) {
 
     // POR AHORA RETORNA EL free DE FREE_LIST
 

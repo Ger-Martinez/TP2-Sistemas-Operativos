@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 void* malloc(uint64_t wantedSize);
-void free(void* address);
+uint8_t free(void* address);
 uint64_t mem_state();
 
 #endif

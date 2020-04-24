@@ -86,6 +86,7 @@ void* free_list_MALLOC(uint64_t wantedSize) {
 			numberOfSuccessfulAllocations++;
         }
 		else{
+			//drawString("  NO BLOCKS   ");
 			return NULL;
 		}
     }
@@ -95,24 +96,17 @@ void* free_list_MALLOC(uint64_t wantedSize) {
 	return returnAddress;
 }
 
-void free_list_FREE( void *addressToFree ) {
-    uint64_t* addr = (uint64_t*) addressToFree;
-    freeBlockNode *block1;
-
-	if( addressToFree != NULL ) {
-		/* The memory being freed will have an freeBlockNode structure immediately before it. */
-		addr -= xHeapStructSize;
-
-		/* This casting is to keep the compiler from issuing warnings. */
-		block1 = (void*) addr;
-
-		if( block1->nextFreeBlock == NULL ) {
-			/* Add this block to the list of free blocks. */
-			freeBytesRemaining += block1->blockSize;
-			insertBlockIntoFreeList( ((freeBlockNode*)block1) );
-			numberOfSuccessfulFrees++;
-        }
-    }
+uint8_t free_list_FREE( void *addressToFree ) {
+	if(addressToFree != NULL) {
+		uint64_t numerical_address = (uint64_t) addressToFree;
+		numerical_address -= xHeapStructSize;
+		freeBlockNode* to_free = (freeBlockNode*)numerical_address;
+		freeBytesRemaining += to_free->blockSize;
+		numberOfSuccessfulFrees++;
+		insertBlockIntoFreeList( ((freeBlockNode*)to_free) );
+		return 0;
+	}
+	return 1;
 }
 
 static void insertBlockIntoFreeList( freeBlockNode* blockToInsert ){
@@ -150,10 +144,6 @@ static void insertBlockIntoFreeList( freeBlockNode* blockToInsert ){
 		blockToInsert->nextFreeBlock = nodeIterator->nextFreeBlock;
 	}
 
-	/* If the block being inserted plugged a gab, so was merged with the block
-	before and the block after, then it's pxNextFreeBlock pointer will have
-	already been set, and should not be set here as that would make it point
-	to itself. */
 	if( nodeIterator != blockToInsert ) {
 		nodeIterator->nextFreeBlock = blockToInsert;
 	}
