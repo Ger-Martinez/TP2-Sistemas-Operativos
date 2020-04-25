@@ -6,16 +6,17 @@ static void draw_char_in_current_writing_position(char character, int fontColor,
 static void move_screen_upwards(int fontColor, int backgroundColor);
 static void drawCharInSpecificSpot(int x, int y, char character, int fontColor, int backgroundColor);
 static void clearChar(int x, int y);
-// BORRAR ESTE SIGUIENTE DESPUESSSSS
-// y tambien borrar abajo de todo el "drawStringInSpeficiposition"
+
+// BORRAR ESTOS 2 DESPUESSSSS
 void drawNumberInSpecificSpot(int x, int y, int number, int fontColor, int backgroundColor);
+void drawStringInSpecificSpot(int x, int y, char* string, int fontColor, int backgroundColor);
 
 // la pantalla tiene 48 filas por 128 columnas
 // necesitamos almacenar todas las lineas, para asi poder moverlas todas hacia abajo
 static char screen[48][128];
 
-static unsigned int screen_width_in_characters;
-static unsigned int screen_height_in_characters;
+static unsigned int screen_width_in_characters = 1024 / CHAR_WIDTH;
+static unsigned int screen_height_in_characters = 768 / CHAR_HEIGHT;
 
 // we start writing at the top of the screen
 static int writing_line_width = 0;

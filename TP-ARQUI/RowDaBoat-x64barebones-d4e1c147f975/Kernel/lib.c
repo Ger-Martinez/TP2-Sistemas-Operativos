@@ -49,9 +49,9 @@ void * memcpy(void * destination, const void * source, uint64_t length)
 	return destination;
 }
 
-int strlen(char* string) {
-	int length = 0;
-	for(int i=0; string[i]!='\0'; i++) {
+uint8_t strlen(char* string) {
+	uint8_t length = 0;
+	for(uint8_t i=0; string[i]!='\0'; i++) {
 		length++;
 	}
 	return length;

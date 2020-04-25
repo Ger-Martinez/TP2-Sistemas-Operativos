@@ -1,4 +1,3 @@
-
 GLOBAL _cli
 GLOBAL _sti
 GLOBAL picMasterMask
@@ -19,11 +18,29 @@ GLOBAL _exception0Handler
 EXTERN irqDispatcher
 EXTERN exceptionDispatcher
 EXTERN syscall_dispatcher
+EXTERN schedule_processes
 
 SECTION .text
 
 %macro pushState 0
 	push rax
+	push rbx
+	push rcx
+	push rdx
+	push rbp
+	push rdi
+	push rsi
+	push r8
+	push r9
+	push r10
+	push r11
+	push r12
+	push r13
+	push r14
+	push r15
+%endmacro
+
+%macro pushStateNoRAX 0
 	push rbx
 	push rcx
 	push rdx
@@ -58,6 +75,23 @@ SECTION .text
 	pop rax
 %endmacro
 
+%macro popStateNoRAX 0
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rsi
+	pop rdi
+	pop rbp
+	pop rdx
+	pop rcx
+	pop rbx
+%endmacro
+
 %macro irqHandlerMaster 1
 	pushState
 
@@ -71,8 +105,6 @@ SECTION .text
 	popState
 	iretq
 %endmacro
-
-
 
 %macro exceptionHandler 1
 	pushState
@@ -116,19 +148,31 @@ picSlaveMask:
     retn
 
 _systemCallsHandler:
-	pushState
+	pushStateNoRAX
 	mov rdi, rax  ; 1st parameter
 	mov rsi, rbx  ; 2nd parameter
 	mov rax, rdx
 	mov rdx, rcx  ; 3rd parameter
 	mov rcx, rax  ; 4th parameter
 	call syscall_dispatcher
-	popState
+	mov rax, rax  ; syscalls have a return value
+	popStateNoRAX
 	iretq
 
 ;8254 Timer (Timer Tick)
 _irq00Handler:
-	irqHandlerMaster 0
+	pushState
+
+	mov rdi, rsp     ; give Stack Pointer to Scheduler, so it can SAVE it 
+	call schedule_processes
+	mov rsp, rax     ; switch the SP, so that now it points to the stack of the new process
+
+	; signal pic EOI (End of Interrupt)
+	mov al, 20h
+	out 20h, al
+
+	popState
+	iretq
 
 ;Keyboard
 _irq01Handler:

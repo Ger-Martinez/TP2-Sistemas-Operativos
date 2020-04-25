@@ -1,21 +1,16 @@
 #include <stdint.h>
 #include <lib.h>   // ya que necesita la funcion cpuvendor
-
-// aunque parece que ya no necesitamos los "ncPrint" ya que estamos en modo video, hay que dejar este
-// include ya que la funcion initializeKernelBinary si las usa. No llega a imprimir nada, pero para mi
-// no debo borrar esta funcion ya que parece que configura cosas. Tendria que preguntar. 
-// Para borrarla hay que: borrarla de aca y tambien del archivo loader.asm
 #include <naiveConsole.h>
-
-// lo mismo para con este. Hay que sacar este include solamente si la funcion de initializeKernelBinary
-// ya no me sirve (para mi siempre hay que dejarla esta funcion)
 #include <moduleLoader.h>
-
 #include <idtLoader.h>     // ya que necesita a load_idt
 
 #include <screen_driver.h>   // creo que es solo para probar cosas, despues seguro se puede sacar
 #include <video_driver.h>   // para incluir la funcion init_video_driver
 #include <time.h>   // seguro despues lo puedo sacar
+
+#include "MemoryManager.h"   // BORRAR DESPUES
+#include "process_manager.h"  // este hay que dejarlo
+#include "buddy.h" // BORRAR DESPUES
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -30,6 +25,9 @@ static void * const sampleCodeModuleAddress = (void*)0x400000;
 static void * const sampleDataModuleAddress = (void*)0x500000;
 
 typedef int (*EntryPoint)();
+
+extern void _hlt(void);
+extern void haltcpu(void);
 
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
@@ -91,10 +89,29 @@ void * initializeKernelBinary() {
 }
 
 int main() {
-	load_idt();
-	init_VM_Driver();
-	while(1){             
-		((EntryPoint)sampleCodeModuleAddress)();
+	
+	/*void* a = buddy_MALLOC(4);
+	if(a == NULL) {
+		drawString("el primer malloc dio NULL\n");
 	}
+	void* b = buddy_MALLOC(1024 * 1024 *64);
+	if(b == NULL) {
+		drawString("el segundo malloc dio NULL\n");
+	}*/
+
+	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0);
+	if(first_process == 1) {
+		drawString("SHELL WAS NOT CREATED --> ABORT");
+		haltcpu();
+	}
+	load_idt();
+	//init_VM_Driver();
+
+	_hlt();
+	drawString("JAJAJAJA");
+	//((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }
+
+
+
