@@ -64,12 +64,14 @@ static int search_command(char command_with_possible_parameter[], char* paramete
         command_without_parameter[i] = command_with_possible_parameter[i];
     }
     command_without_parameter[i] = '\0';
+
     uint8_t command_found = 0;
-    for(uint8_t j=0; j<NUMBER_OF_COMMANDS && !command_found; j++) {
+
+    for(uint8_t j = 0; j < NUMBER_OF_COMMANDS && !command_found; j++) {
         if( strcmp(command_without_parameter, all_commands[j]) == 0) {
             number_of_command = j;
             command_found = 1;
-        }
+        } 
     }
 
     if(number_of_command == -1) {

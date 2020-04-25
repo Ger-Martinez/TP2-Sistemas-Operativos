@@ -6,20 +6,21 @@
 
 char * descriptions[NUMBER_OF_COMMANDS] = 
 { 
-"Imprime en pantalla el valor actual de todos los registros", 
-"Muestra todos los distintos programas disponibles", 
-"Verifica el funcionamiento de la rutina de excepcion de la division por cero", 
-"Verifica el funcionamiento de la rutina de excepcion de codigo de operacion invalido", 
-"Realiza un volcado de memoria de 32 bytes a partir de la direccion recibida como parametro", 
-"Imprime en pantalla la hora actual", 
-"hago un test",
-"imprime el estado de la memoria",
-"mata a un proceso segun su PID",
-"TEST: test_mm prueba la Memory Manager", 
-"bloquea otro proceso dado su PID",
-"lista todos los procesos existentes",
-"imprime un saludo cada algunos segundos"
+    "imprime el estado de la memoria",
+    "mata a un proceso segun su PID",
+    "TEST: test_mm prueba la Memory Manager", 
+    "bloquea otro proceso dado su PID",
+    "lista todos los procesos existentes",
+    "imprime un saludo cada algunos segundos",
+    "Imprime en pantalla el valor actual de todos los registros", 
+    "Muestra todos los distintos programas disponibles", 
+    "Verifica el funcionamiento de la rutina de excepcion de la division por cero", 
+    "Verifica el funcionamiento de la rutina de excepcion de codigo de operacion invalido", 
+    "Realiza un volcado de memoria de 32 bytes a partir de la direccion recibida como parametro", 
+    "Imprime en pantalla la hora actual"
 };
+
+
 
 static void inforeg();
 static void help();
@@ -27,7 +28,6 @@ static void exception0();
 static void exception6();
 static void printmem(char* parameter);
 static void showTime();
-static void test(int background, uint8_t pid_key);
 static void mem();
 static void kill(char* PID);
 static void block(char* parameter);
@@ -49,55 +49,51 @@ extern uint16_t syscall_getpid(uint8_t pid_key);
 void execute_command(int command, char* parameter, uint8_t pid_key, int background) {
     switch(command){
         case 0:{
-            inforeg();
-            break;
-        }
-        case 1:{
-            help();
-            break;
-        }
-        case 2:{
-            exception0();
-            break;
-        }
-        case 3:{
-            exception6();
-            break;
-        }
-        case 4:{
-            printmem(parameter);
-            break;
-        }
-        case 5:{
-            showTime();
-            break;
-        }
-        case 6:{
-            test(background, pid_key);
-            break;
-        }
-        case 7:{
             mem();
             break;
         }
-        case 8:{
+        case 1:{
             kill(parameter);
             break;
         }
-        case 9:{
+        case 2:{
             testing_mm(background, pid_key);
             break;
         }
-        case 10:{
+        case 3:{
             block(parameter);
             break;
         }
-        case 11:{
+        case 4:{
             ps();
             break;
         }
-        case 12:{
+        case 5:{
             loop(background, pid_key);
+            break;
+        }
+        case 6:{
+            inforeg();
+            break;
+        }
+        case 7:{
+            help();
+            break;
+        }
+        case 8:{
+            exception0();
+            break;
+        }
+        case 9:{
+            exception6();
+            break;
+        }
+        case 10:{
+            printmem(parameter);
+            break;
+        }
+        case 11:{
+            showTime();
             break;
         }
     }
@@ -167,17 +163,6 @@ static void mem() {
     print("\n");
 }
 
-static void test(int background, uint8_t pid_key) {
-    mem();
-    void* a = syscall_malloc(9999999);
-    void* b = syscall_malloc(9999999);
-    mem();
-    int aa = syscall_free(a); if(aa==1){print("FREE fallo\n");} 
-    mem();
-    int bb = syscall_free(b); if(bb==1){print("FREE fallo\n");}
-    mem();
-}
-
 static void loop_command(uint8_t pid_key) {
     uint64_t count = 0;
     uint16_t pid = syscall_getpid(pid_key);
@@ -205,8 +190,10 @@ static void inforeg(){
 }
 
 static void help() {
-    /* NO OLVIDARSE DE ACTUALIZARLO */
-    for(int i=0; i<NUMBER_OF_COMMANDS; i++) {
+    for(int i = 0; i < NUMBER_OF_COMMANDS; i++) {
+        if(i == 6) {
+            print("------------------\n  ARQUI LEGACY COMMANDS\n");
+        }
         print(all_commands[i]);
         print(":  ");
         print(descriptions[i]);

@@ -15,9 +15,10 @@ typedef struct process_control_block {
     uint64_t stackPointer;
     uint16_t PID;
     uint8_t son_of_PID;
+    uint64_t basePointer;
 } PCB;
 
-static PCB init = {READY, 0, 0, 0};
+static PCB init = {READY, 0, 0, 0, 0};
 static uint8_t configure_init_process();
 static void execute_init();
 
@@ -86,6 +87,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
         for (int i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
             all_blocks[i].state = DEAD;
             all_blocks[i].stackPointer = 0;
+            all_blocks[i].basePointer = 0;
             all_blocks[i].PID = 0;
             all_blocks[i].son_of_PID = 0;
         }
@@ -105,6 +107,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
     if(i < MAX_NUMBER_OF_PROCESSES) {
         all_blocks[i].state = READY;
         all_blocks[i].stackPointer = stackPointerAddress;
+        all_blocks[i].basePointer = stackPointerAddress;
         all_blocks[i].PID = pid_number;
         pid_number++;
         if(first_call_to_create_PCB)
@@ -148,6 +151,7 @@ static uint8_t configure_init_process(){
     drawString("  INIT REAL STACK = "); drawNumber(init_stack_address, 0xFFFFFF, 0x000000);
     drawString("\n");
     init.stackPointer = init_stack_address;
+    init.basePointer = init_stack_address;
     init.PID = pid_number;
     pid_number++;
     return 0;
@@ -179,11 +183,6 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
                     foreground_process = i;
                     break;
                 }
-                /*if(all_blocks[i].state != BLOCKED && all_blocks[i].state != BLOCKED_READING){
-                    all_blocks[i].state = READY;
-                    foreground_process = i;
-                }
-                break;*/
             }
         }
     }
@@ -213,10 +212,12 @@ uint8_t get_foreground_process() {
 }
 
 uint64_t ps(void) {
-    drawString("PID        STATE        ¿FG?        RSP        CHILD OF\n");
+    drawString("PID        STATE        ¿FG?        RSP          RBP        CHILD OF\n");
     drawNumber(init.PID, 0xFFFFFF, 0x000000);
     drawString("           READY        NO        ");
     drawNumber(init.stackPointer, 0xFFFFFF, 0x000000);
+    drawString("        ");
+    drawNumber(init.basePointer, 0xFFFFFF, 0x000000);
     drawString("       ----\n");
     for(int i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].state != DEAD) {
@@ -245,6 +246,8 @@ uint64_t ps(void) {
             else
                 drawString("NO         ");
             drawNumber(all_blocks[i].stackPointer, 0xFFFFFF, 0x000000);
+            drawString("        ");
+            drawNumber(all_blocks[i].basePointer, 0xFFFFFF, 0x000000);
             drawString("        ");
             drawNumber(all_blocks[i].son_of_PID, 0xFFFFFF, 0x000000);
             drawString("\n");

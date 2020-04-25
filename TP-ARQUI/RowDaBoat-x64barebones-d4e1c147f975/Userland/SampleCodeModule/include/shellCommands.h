@@ -1,25 +1,25 @@
 #ifndef SHELL_COMMANDS_H
 #define SHELL_COMMANDS_H
 
-#define NUMBER_OF_COMMANDS 13
+#define NUMBER_OF_COMMANDS 12
 #include <stdint.h>
 
 void execute_command(int command, char* parameter, uint8_t pid_key, int background);
 
 static char* all_commands[] = 
-{"inforeg", 
-"help",
-"exception0", 
-"exception6",
-"printmem",
-"showTime",
-"test",
-"mem",
-"kill",
-"test_mm",
-"block",
-"ps",
-"loop"
+{
+    "mem",
+    "kill",
+    "test_mm",
+    "block",
+    "ps",
+    "loop",
+    "inforeg", 
+    "help",
+    "exception0", 
+    "exception6",
+    "printmem",
+    "showTime",
 };
 
 #endif
