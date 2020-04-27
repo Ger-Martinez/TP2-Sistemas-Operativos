@@ -70,13 +70,16 @@ static uint64_t read_syscall(int where_to_read, char* where_to_store) {
     switch(where_to_read){
         case STD_INPUT:{  // read from the keyboard buffer
             if(get_keyboard_buffer() == -1) {
+                // if the keyboard_buffer does NOT have a letter to return, we are in a BLOCKING READ-SYSCALL
                 change_process_state_with_INDEX(get_foreground_process(), BLOCKED_READING);
                 _hlt();
             }
+            // we arrive here once the keyboard_buffer has a letter, and the process that made this READ is unblocked
             where_to_store[0] = get_keyboard_buffer();
             return 0; 
         }
         case RTC:{
+            /* Arqui legacy */
             int seg = segundos();
 			int min = minutos();
 			int hora = horas();

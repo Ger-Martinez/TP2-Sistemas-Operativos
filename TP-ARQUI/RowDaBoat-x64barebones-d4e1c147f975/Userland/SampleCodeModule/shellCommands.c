@@ -106,6 +106,7 @@ static void ps() {
 static void testing_mm(uint8_t background, uint8_t pid_key) {
     void (*p)(void);
     p = test_mm;
+    // we create a process, which will start its execution on the "test_mm" function
     int ret = syscall_create_process((uint64_t)p, background, pid_key);
     if(ret == 1) {
         print("ERROR: could not create process \"test_mm\"\n");
@@ -115,7 +116,7 @@ static void testing_mm(uint8_t background, uint8_t pid_key) {
 
 static void block(char* PID) {
     if(strcmp(PID, "X") == 0) {
-        print("  ERROR: debe elegir a que proceso bloquear");
+        print("  ERROR: a PID must be given as an argument.");
         return;
     }
     uint16_t PID_number = string_to_num(PID);
@@ -129,7 +130,7 @@ static void block(char* PID) {
     else{
         uint64_t ret = syscall_block(PID_number);
         if(ret == 1) {
-            print("ERROR: no se pudo cambiar el estado del proceso con PID = ");
+            print("ERROR: could not block/unblock process with PID = ");
             print(PID);
         }
     }
@@ -137,7 +138,7 @@ static void block(char* PID) {
 
 static void kill(char* PID) {
     if(strcmp(PID, "X") == 0) {
-        print("  ERROR: Debe pasarse un PID como parametro");
+        print("  ERROR: a PID must be given as an argument.");
     } 
     else if(strcmp(PID, "1") == 0) {
         print("  ERROR: cannot kill INIT process");
@@ -149,7 +150,7 @@ static void kill(char* PID) {
         uint16_t PID_number = string_to_num(PID);
         int ret = syscall_kill(PID_number);
         if(ret == 1) {
-            print("  ERROR: could no kill process with PID = ");
+            print("  ERROR: could not kill process with PID = ");
             print(PID);
             print(", because it does NOT EXIST");
         }
@@ -160,10 +161,11 @@ static void mem() {
     print("  BYTES REMAINING FOR ALLOCATION: ");
     uint64_t free_memory = syscall_memory_state();
     print( num_to_string(free_memory) );
-    print("\n");
 }
 
-static void loop_command(uint8_t pid_key) {
+// this is NOT the command loop, this is the code that the loop process will run
+// check the next function for the loop-command code
+static void loop_code(uint8_t pid_key) {
     uint64_t count = 0;
     uint16_t pid = syscall_getpid(pid_key);
     while(1) {
@@ -175,12 +177,14 @@ static void loop_command(uint8_t pid_key) {
     }
 }
 
+// this is the loop command
 static void loop(uint8_t background, uint8_t pid_key) {
     void (*foo)(uint8_t);
-    foo = loop_command;
+    foo = loop_code;
+    // we create the loop process, which will start its execution in the "loop_code"
     int ret = syscall_create_process((uint64_t)foo, background, pid_key);
     if(ret == 1) {
-        print("ERROR: No se pudo crear el proceso para el comando loop\n");
+        print("ERROR: could not create process \"loop\"\n");
     }
 }
 
@@ -217,6 +221,7 @@ static void printmem(char* parameter) {
 }
 
 static void showTime() {
+    /* Arqui Legacy */
     char time[]= {-1, -1, ':', -1, -1, ':', -1, -1, '\0'};
     syscall_read(3, time, 1);
     print(time);
