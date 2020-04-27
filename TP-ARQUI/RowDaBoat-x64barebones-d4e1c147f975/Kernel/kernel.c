@@ -89,27 +89,20 @@ void * initializeKernelBinary() {
 }
 
 int main() {
-	
-	/*void* a = buddy_MALLOC(4);
-	if(a == NULL) {
-		drawString("el primer malloc dio NULL\n");
-	}
-	void* b = buddy_MALLOC(1024 * 1024 *64);
-	if(b == NULL) {
-		drawString("el segundo malloc dio NULL\n");
-	}*/
-
+	// create the first process which is the SHELL
 	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0);
 	if(first_process == 1) {
 		drawString("SHELL WAS NOT CREATED --> ABORT");
 		haltcpu();
 	}
-	load_idt();
-	//init_VM_Driver();
 
+	// Arqui function provided by the proffesors. Loads the IDT and fill it with int0, int20, int21 and int80
+	load_idt();
+
+	// halt the cpu until the TT interruption arrives, which will choose the Shell as the running process
 	_hlt();
-	drawString("JAJAJAJA");
-	//((EntryPoint)sampleCodeModuleAddress)();
+	drawString("If this is shown, then something is wrong! \n");
+	// ((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }
 

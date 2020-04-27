@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include <screen_driver.h>
 
+
+/***********  STILL UNDER DEVELOPMENT  **************/
+
+
 #define MIN_BLOCK_SIZE 4096  // 4KB
 #define TOTAL_HEAP_SIZE (128 * 1024 * 1024)  // 128 MB
 #define START_OF_HEAP (void*) 0x600000

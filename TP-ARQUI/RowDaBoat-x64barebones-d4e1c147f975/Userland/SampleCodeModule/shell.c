@@ -21,18 +21,21 @@ static void shell_main(uint8_t pid_key) {
     int command;
     while(1) {
         c = getChar();
-        if(c != -1) {
+        if(c != -1) {   // TODO: ESTO CREO QUE SE PUEDE SACAR
             if(c == '\n') {
                 putchar(c);     // print the '\n' to move to the next line
                 shell_buffer[k++] = '\0';
-                char* parameter = "X"; 
-                uint8_t background = 0;
+                char* parameter = "X"; // TODO: HAY QUE MOVER ESTO ARRIBA
+                uint8_t background = 0; // TODO: HAY QUE MOVER ESTO ARRIBA
+
                 command = search_command(shell_buffer, parameter, &background);
                 if(command != -1)
                     execute_command(command, parameter, pid_key, background);
                 else
                     print("   Command not found");
+
                 putchar(c);  // print the '\n' to move to the next line
+
                 // empty our shell_buffer to prepare for the next line
                 for(int i=0; shell_buffer[i] != '\0'; i++) {
                     shell_buffer[i] = '\0';
@@ -55,10 +58,10 @@ static void shell_main(uint8_t pid_key) {
 }
 
 static int search_command(char command_with_possible_parameter[], char* parameter, uint8_t* background) {
-    
     int number_of_command = -1;
-    char command_without_parameter[SHELL_BUFFER_SIZE] = {'\0'};
 
+    // we save the first word typed
+    char command_without_parameter[SHELL_BUFFER_SIZE] = {'\0'};
     uint8_t i=0;
     for( ; command_with_possible_parameter[i]!='\0' && command_with_possible_parameter[i]!=' '; i++){
         command_without_parameter[i] = command_with_possible_parameter[i];
@@ -67,6 +70,7 @@ static int search_command(char command_with_possible_parameter[], char* paramete
 
     uint8_t command_found = 0;
 
+    // we check if this first word matches a known command
     for(uint8_t j = 0; j < NUMBER_OF_COMMANDS && !command_found; j++) {
         if( strcmp(command_without_parameter, all_commands[j]) == 0) {
             number_of_command = j;
@@ -75,24 +79,30 @@ static int search_command(char command_with_possible_parameter[], char* paramete
     }
 
     if(number_of_command == -1) {
-        // si no encontre el comando, ni me fijo en el parametro, y salgo de esta funcion
+        // if there was no match, we return error
         return -1;
     }
 
+    // if there was a match, we have to check if there was a parameter or a '&' next to the command
     if(command_with_possible_parameter[i] == ' ') {
-        // there is also a parameter next to the command, or maybe a '&'
+
+        // if there was an '&', then after it we must find NOTHING
         if(command_with_possible_parameter[i+1] == '&') {
             *background = 1;
             i++;
             if(command_with_possible_parameter[i+1] != '\0')
                 return -1;
+        } 
 
-        } else {
+        // if there was a parameter, we retrieve it
+        else {
             uint8_t j2=0, j1;
             for(j1=i+1; command_with_possible_parameter[j1]!='\0' && command_with_possible_parameter[j1] != ' '; j1++) {
                 parameter[j2++] = command_with_possible_parameter[j1];
             }
             parameter[j2++] = '\0';
+
+            // if there was an '&' after the parameter, then after the '&' we must find NOTHING
             if(command_with_possible_parameter[j1] == ' ') {
                 if(command_with_possible_parameter[j1+1] == '&'){
                     j1++;

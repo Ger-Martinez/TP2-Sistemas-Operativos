@@ -37,6 +37,8 @@ void keyboard_handler(void){
         // no añado nada al buffer ya que el teclado no me dio ninguna tecla nueva
         return;
     }
+
+    // if a letter was read, then we must UNBLOCK the FG process that made the READ-syscall
     change_process_state_with_INDEX(get_foreground_process(), READY);
     buffer = letra;  // añado la letra al buffer
 }

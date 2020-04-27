@@ -83,6 +83,8 @@ uint64_t choose_next_process(uint64_t previous_process_SP) {
 }
 
 uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress, uint8_t background, uint8_t parent_pid_key) {
+    
+    // we initialize the array "all_blocks" with all DEAD-processes
     if(first_call_to_create_PCB) {
         for (int i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
             all_blocks[i].state = DEAD;
@@ -91,37 +93,43 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
             all_blocks[i].PID = 0;
             all_blocks[i].son_of_PID = 0;
         }
+        // before creating the first process (shell), we create the init process
         uint8_t ret = configure_init_process();
         if(ret == 1) {
             drawString("ERROR in create_PCB_and_insert_it_on_scheduler_queue: could not create init process\n");
             return 1;
         }
     }
+
     int i;
     for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
-        if(all_blocks[i].state == DEAD){  // we find the first empty position
+        if(all_blocks[i].state == DEAD){  // we find the first empty position in the PCB's array
             break;
         }
     }
 
     if(i < MAX_NUMBER_OF_PROCESSES) {
+        // we fill the PCB with the required info
         all_blocks[i].state = READY;
         all_blocks[i].stackPointer = stackPointerAddress;
         all_blocks[i].basePointer = stackPointerAddress;
         all_blocks[i].PID = pid_number;
         pid_number++;
+
+        // the first time we call this function, the SHELL is created, so its parent is init
         if(first_call_to_create_PCB)
-            all_blocks[i].son_of_PID = 1;
+            all_blocks[i].son_of_PID = init.PID;
         else
             all_blocks[i].son_of_PID = all_blocks[parent_pid_key].PID;
+
         first_call_to_create_PCB = 0;
+
+        // if this process was meant to be created in FG, we must block the caller process
         if(background == 0) {
-            // we must block the process that executed the create_process syscall
             all_blocks[parent_pid_key].state = BLOCKED;
-            drawNumber(parent_pid_key, 0xFFFFFF, 0x000000);
             foreground_process = i;
-            drawString("-th process will be blocked because it has created a FG process\n");
             _hlt();
+            // the caller process will only continue when its new FG child executes exit(), which will unblock caller process
         }
         return 0;
     } else {
@@ -130,6 +138,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
     }
 }
 
+// init code
 static void execute_init() {
     while(1){
         _hlt();
@@ -137,19 +146,22 @@ static void execute_init() {
 }
 
 static uint8_t configure_init_process(){
+    // the address returned by malloc is the END of the stack
     void* init_stack_end = malloc(INIT_STACK_SIZE);
-    //drawString("start of init = "); drawNumber((uint64_t)init_stack_end, 0xFFFFFF, 0x000000);
     if(init_stack_end == NULL) {
         drawString("ERROR in configure_init_process: could not malloc stack size\n");
         return 1;
     }
+
+    // the end of the allocked memory is the start of the stack
     void* init_stack_start = init_stack_end + INIT_STACK_SIZE;
-    //drawString("  end of init = "); drawNumber((uint64_t)init_stack_start, 0xFFFFFF, 0x000000);
+
+    // we create a pointer to the function that init always runs
     void (*init_code)(void);
     init_code = execute_init;
+    // push everything in the new stack, preparing the init process for the TT's "pushState" and "iretq"
     uint64_t init_stack_address = configure_stack((uint64_t)init_stack_start, init_code);
-    //drawString("  INIT REAL STACK = "); drawNumber(init_stack_address, 0xFFFFFF, 0x000000);
-    //drawString("\n");
+
     init.stackPointer = init_stack_address;
     init.basePointer = init_stack_address;
     init.PID = pid_number;
