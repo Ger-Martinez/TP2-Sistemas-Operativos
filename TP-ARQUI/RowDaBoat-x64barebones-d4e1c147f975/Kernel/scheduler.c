@@ -138,18 +138,18 @@ static void execute_init() {
 
 static uint8_t configure_init_process(){
     void* init_stack_end = malloc(INIT_STACK_SIZE);
-    drawString("start of init = "); drawNumber((uint64_t)init_stack_end, 0xFFFFFF, 0x000000);
+    //drawString("start of init = "); drawNumber((uint64_t)init_stack_end, 0xFFFFFF, 0x000000);
     if(init_stack_end == NULL) {
         drawString("ERROR in configure_init_process: could not malloc stack size\n");
         return 1;
     }
     void* init_stack_start = init_stack_end + INIT_STACK_SIZE;
-    drawString("  end of init = "); drawNumber((uint64_t)init_stack_start, 0xFFFFFF, 0x000000);
+    //drawString("  end of init = "); drawNumber((uint64_t)init_stack_start, 0xFFFFFF, 0x000000);
     void (*init_code)(void);
     init_code = execute_init;
     uint64_t init_stack_address = configure_stack((uint64_t)init_stack_start, init_code);
-    drawString("  INIT REAL STACK = "); drawNumber(init_stack_address, 0xFFFFFF, 0x000000);
-    drawString("\n");
+    //drawString("  INIT REAL STACK = "); drawNumber(init_stack_address, 0xFFFFFF, 0x000000);
+    //drawString("\n");
     init.stackPointer = init_stack_address;
     init.basePointer = init_stack_address;
     init.PID = pid_number;
