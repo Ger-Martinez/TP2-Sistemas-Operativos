@@ -14,5 +14,6 @@ uint8_t get_state(uint16_t PID);
 
 uint8_t get_foreground_process();
 uint64_t ps(void);
+uint64_t change_priority(uint8_t pid, uint8_t priority);
 
 #endif

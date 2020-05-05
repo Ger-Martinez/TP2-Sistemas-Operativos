@@ -43,9 +43,11 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter,
             return 0;  // the CPU will never get to this return
         }
         case 7:
-            return negate_state(second_parameter);
+            return negate_state(second_parameter, (uint16_t)third_parameter);
         case 8:
             return ps();
+        case 9:
+            return change_priority(second_parameter, (uint8_t)third_parameter);
         default:{
             // we just add this to keep warnings quiet
             return 0;

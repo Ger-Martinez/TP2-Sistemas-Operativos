@@ -13,6 +13,6 @@
 uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key);
 void exit_process(uint8_t pid_key);
 uint64_t kill_process(uint16_t PID);
-uint64_t negate_state(uint16_t PID);
+uint64_t negate_state(uint16_t PID_to_block, uint16_t PID_of_calling_process);
 
 #endif

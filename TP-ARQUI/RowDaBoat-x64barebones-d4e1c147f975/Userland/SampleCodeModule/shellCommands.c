@@ -3,6 +3,7 @@
 #include "string.h"
 #include <stdint.h>
 #include "test_mm.h"
+#include "semaphores.h"
 
 char * descriptions[NUMBER_OF_COMMANDS] = 
 { 
@@ -12,15 +13,15 @@ char * descriptions[NUMBER_OF_COMMANDS] =
     "bloquea otro proceso dado su PID",
     "lista todos los procesos existentes",
     "imprime un saludo cada algunos segundos",
+    "cambia la prioridad de un proceso",
     "Imprime en pantalla el valor actual de todos los registros", 
     "Muestra todos los distintos programas disponibles", 
     "Verifica el funcionamiento de la rutina de excepcion de la division por cero", 
     "Verifica el funcionamiento de la rutina de excepcion de codigo de operacion invalido", 
     "Realiza un volcado de memoria de 32 bytes a partir de la direccion recibida como parametro", 
-    "Imprime en pantalla la hora actual"
+    "Imprime en pantalla la hora actual",
+    "realiza un test"
 };
-
-
 
 static void inforeg();
 static void help();
@@ -30,10 +31,12 @@ static void printmem(char* parameter);
 static void showTime();
 static void mem();
 static void kill(char* PID);
-static void block(char* parameter);
+static void block(char* parameter, uint8_t pid_key);
 static void testing_mm(uint8_t background, uint8_t pid_key);
 static void ps(void);
 static void loop(uint8_t background, uint8_t pid_key);
+static void nice();
+static void test(uint8_t pid_key);
 
 extern uint64_t syscall_read(int, char*, int);
 extern uint64_t syscall_create_process(uint64_t, int, uint8_t);
@@ -42,9 +45,11 @@ extern uint64_t syscall_free(void*);
 extern uint64_t syscall_memory_state(void);
 extern uint64_t syscall_kill(uint16_t PID);
 extern char* num_to_string(int number);
-extern uint64_t syscall_block(uint16_t PID);
+extern uint64_t syscall_block(uint16_t PID, uint16_t PID_of_calling_process);
 extern void syscall_ps(void);
 extern uint16_t syscall_getpid(uint8_t pid_key);
+extern uint64_t syscall_nice(uint8_t pid, uint8_t priority);
+extern uint64_t syscall_exit(uint8_t pid_key);
 
 void execute_command(int command, char* parameter, uint8_t pid_key, int background) {
     switch(command){
@@ -61,7 +66,7 @@ void execute_command(int command, char* parameter, uint8_t pid_key, int backgrou
             break;
         }
         case 3:{
-            block(parameter);
+            block(parameter, pid_key);
             break;
         }
         case 4:{
@@ -73,29 +78,109 @@ void execute_command(int command, char* parameter, uint8_t pid_key, int backgrou
             break;
         }
         case 6:{
-            inforeg();
+            nice();
             break;
         }
         case 7:{
-            help();
+            inforeg();
             break;
         }
         case 8:{
-            exception0();
+            help();
             break;
         }
         case 9:{
-            exception6();
+            exception0();
             break;
         }
         case 10:{
-            printmem(parameter);
+            exception6();
             break;
         }
         case 11:{
+            printmem(parameter);
+            break;
+        }
+        case 12:{
             showTime();
             break;
         }
+        case 13:{
+            test(pid_key);
+            break;
+        }
+    }
+}
+
+void process_A_code(uint8_t pid_key) {
+    uint8_t pid = syscall_getpid(pid_key);
+    int ret = create_semaphore(2, 1);
+    if(ret == -1) {
+        print("EEROR: NO SE PUDO CREAR EL SEMAFORO\n");
+        return;
+    }
+
+    sem_wait(1, pid);
+    sem_wait(1, pid);
+    sem_post(1, pid);
+    sem_wait(1, pid);
+    // no deberia bloquear mas
+
+    ret = destroy_semaphore(1);
+    if(ret == 1)
+        print("EEROR: NO SE PUDO DESTRUIR EL SEMAFORO\n");
+    syscall_exit(pid_key);
+}
+
+static void test(uint8_t pid_key) {
+    void (*foo)(uint8_t);
+    foo = process_A_code;
+    int ret = syscall_create_process((uint64_t)foo, 1, pid_key);
+    if(ret == 1) {
+        print("ERRORRRRRRRRR\n");
+    }
+}
+
+
+static void receive_nice_parameters(char * pid_array) {
+    char aux = ' ';
+    uint8_t i=0;
+    char to_print[2] = {'\0', '\0'};
+    while( aux != '\n' && i != 3) {
+        aux = getChar();
+        if(aux != -1 && aux != '\n'){
+            *(pid_array + i*sizeof(char)) = aux;
+            i++;
+            to_print[0] = aux;
+            print(to_print);
+        }
+    }
+}
+
+static void nice(void) {
+    print("Ingrese el PID del proceso (maximo 3 caracteres): ");
+    char pid[4] = {'\0'};          // la 4ta posicion siempre es \0
+    char priority[4] = {'\0'};     // la 4ta posicion siempre es \0
+
+    receive_nice_parameters( &(pid[0]) );
+    if(strlen(pid) == 0) {
+        print("\n  ERROR: a PID must be given\n");
+        return;
+    }
+    print("\n");
+    print("Ingrese la nueva prioridad para el proceso (maximo 3 caracteres): ");
+    receive_nice_parameters(&(priority[0]));
+    if(strlen(priority) == 0) {
+        print("\n  ERROR: a priority number must be given\n");
+        return;
+    }
+    uint8_t pid_number = string_to_num(pid);
+    uint8_t priority_number = string_to_num(priority);
+    uint8_t ret = syscall_nice(pid_number, priority_number);
+    if(ret == 1) {
+        print("\n  ERROR: a process with PID = ");
+        print(pid);
+        print(" could not be found");
     }
 }
 
@@ -114,7 +199,7 @@ static void testing_mm(uint8_t background, uint8_t pid_key) {
 }
 
 
-static void block(char* PID) {
+static void block(char* PID, uint8_t pid_key) {
     if(strcmp(PID, "X") == 0) {
         print("  ERROR: a PID must be given as an argument.");
         return;
@@ -128,7 +213,7 @@ static void block(char* PID) {
         return;
     }
     else{
-        uint64_t ret = syscall_block(PID_number);
+        uint64_t ret = syscall_block(PID_number, syscall_getpid(pid_key));
         if(ret == 1) {
             print("ERROR: could not block/unblock process with PID = ");
             print(PID);
@@ -195,7 +280,7 @@ static void inforeg(){
 
 static void help() {
     for(int i = 0; i < NUMBER_OF_COMMANDS; i++) {
-        if(i == 6) {
+        if(i == 7) {
             print("------------------\n  ARQUI LEGACY COMMANDS\n");
         }
         print(all_commands[i]);

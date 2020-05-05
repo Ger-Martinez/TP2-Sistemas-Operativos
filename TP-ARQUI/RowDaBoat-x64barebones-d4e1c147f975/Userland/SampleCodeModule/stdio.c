@@ -2,6 +2,7 @@
 #include "string.h"
 
 #define STD_INPUT 0
+#define NULL ((void*)0)
 
 extern void syscall_write(char* toWrite, int length);
 extern void syscall_read(int file_descriptor, char* toRead,int length);

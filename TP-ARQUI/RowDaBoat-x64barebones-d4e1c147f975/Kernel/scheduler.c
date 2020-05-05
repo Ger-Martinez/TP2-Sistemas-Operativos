@@ -16,9 +16,11 @@ typedef struct process_control_block {
     uint16_t PID;
     uint8_t son_of_PID;
     uint64_t basePointer;
+    uint8_t priority;
+    uint8_t ageing;
 } PCB;
 
-static PCB init = {READY, 0, 0, 0, 0};
+static PCB init = {READY, 0, 0, 0, 0, 1, 1};
 static uint8_t configure_init_process();
 static void execute_init();
 
@@ -38,6 +40,12 @@ static uint8_t foreground_process = 0;
 uint64_t schedule_processes(uint64_t previous_process_SP) {
     timer_handler();  // el handler de Timer Tick del TP de arqui sigue estando
    
+    if(all_blocks[current-1].ageing > 1) {
+        all_blocks[current-1].ageing --;
+        return previous_process_SP;
+    }
+    all_blocks[current-1].ageing = all_blocks[current-1].priority;
+
     uint64_t new_process_SP;
     if(first_call_to_scheduler) {
         new_process_SP = choose_next_process(0);
@@ -52,8 +60,9 @@ uint64_t choose_next_process(uint64_t previous_process_SP) {
     uint64_t SP_to_return, ready_block_found = 0;
     int i, count;
 
-    if(previous_process_SP != 0 && !init_was_called)
+    if(previous_process_SP != 0 && !init_was_called){
         all_blocks[current-1].stackPointer = previous_process_SP;
+    }
 
     for(i = current, count = 0; !ready_block_found && count != MAX_NUMBER_OF_PROCESSES; i++, count++) {
         if(all_blocks[i].state == READY) {
@@ -92,6 +101,8 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
             all_blocks[i].basePointer = 0;
             all_blocks[i].PID = 0;
             all_blocks[i].son_of_PID = 0;
+            all_blocks[i].priority = 1;
+            all_blocks[i].ageing = all_blocks[i].priority;
         }
         // before creating the first process (shell), we create the init process
         uint8_t ret = configure_init_process();
@@ -191,6 +202,7 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
         for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
             if(all_blocks[i].PID == PID_of_parent) {
                 if(foreground_process == index) {
+                    drawString("no se deberia ver\n");
                     all_blocks[i].state = READY;
                     foreground_process = i;
                     break;
@@ -224,9 +236,9 @@ uint8_t get_foreground_process() {
 }
 
 uint64_t ps(void) {
-    drawString("PID        STATE        ¿FG?        RSP          RBP        CHILD OF\n");
+    drawString("PID        STATE        ¿FG?        PRIORITY        RSP          RBP        CHILD OF\n");
     drawNumber(init.PID, 0xFFFFFF, 0x000000);
-    drawString("           READY        NO        ");
+    drawString("           READY        NO             1        ");
     drawNumber(init.stackPointer, 0xFFFFFF, 0x000000);
     drawString("        ");
     drawNumber(init.basePointer, 0xFFFFFF, 0x000000);
@@ -254,9 +266,11 @@ uint64_t ps(void) {
                 }
             }
             if(i == foreground_process)
-                drawString("YES        ");
+                drawString("YES             ");
             else
-                drawString("NO         ");
+                drawString("NO              ");
+            drawNumber(all_blocks[i].priority, 0xFFFFFF, 0x000000);
+            drawString("        ");
             drawNumber(all_blocks[i].stackPointer, 0xFFFFFF, 0x000000);
             drawString("        ");
             drawNumber(all_blocks[i].basePointer, 0xFFFFFF, 0x000000);
@@ -266,4 +280,16 @@ uint64_t ps(void) {
         }
     }
     return 0;
+}
+
+uint64_t change_priority(uint8_t pid, uint8_t priority) {
+    int i;
+    for(i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
+        if(all_blocks[i].PID == pid) {
+            all_blocks[i].priority = priority;
+            all_blocks[i].ageing = priority;
+            return 0;
+        }
+    }
+    return 1;
 }

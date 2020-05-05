@@ -58,7 +58,9 @@ uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
 void exit_process(uint8_t pid_key) {
     number_of_free_processes++;
     change_process_state_with_INDEX(pid_key, DEAD);
-    _hlt();
+    while(1){
+        _hlt();
+    }
 }
 
 uint64_t kill_process(uint16_t PID) {
@@ -66,13 +68,22 @@ uint64_t kill_process(uint16_t PID) {
     return change_process_state_with_PID(PID, DEAD);
 }
 
-uint64_t negate_state(uint16_t PID) {
-    if(get_state(PID) == 1)
+uint64_t negate_state(uint16_t PID_to_block, uint16_t PID_of_calling_process) {
+    uint8_t state = get_state(PID_to_block);
+    if(state == 1)
         return 1;
 
-    if(get_state(PID) == READY)
-        change_process_state_with_PID(PID, BLOCKED);
-    else if(get_state(PID) == BLOCKED)
-        change_process_state_with_PID(PID, READY);
+    if(state == READY)
+        change_process_state_with_PID(PID_to_block, BLOCKED);
+    else if(state == BLOCKED)
+        change_process_state_with_PID(PID_to_block, READY);
+
+    if(PID_to_block == PID_of_calling_process) {
+        while(1){
+            if(get_state(PID_to_block) == READY)
+                break;
+            _hlt();
+        }
+    }
     return 0;
 }
