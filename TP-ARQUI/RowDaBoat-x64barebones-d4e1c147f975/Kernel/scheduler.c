@@ -13,14 +13,15 @@ extern void _hlt(void);
 typedef struct process_control_block {
     uint8_t state;
     uint64_t stackPointer;
-    uint16_t PID;
-    uint8_t son_of_PID;
+    uint64_t stackStart;  // will never change. Used for freeing the memory used by the process
+    uint32_t PID;
+    uint32_t son_of_PID;
     uint64_t basePointer;
     uint8_t priority;
     uint8_t ageing;
 } PCB;
 
-static PCB init = {READY, 0, 0, 0, 0, 1, 1};
+static PCB init = {READY, 0, 0, 0, 0, 0, 1, 1};
 static uint8_t configure_init_process();
 static void execute_init();
 
@@ -30,7 +31,7 @@ static PCB all_blocks[MAX_NUMBER_OF_PROCESSES];
 static uint8_t first_call_to_scheduler = 1;
 static uint8_t first_call_to_create_PCB = 1;
 
-static uint16_t pid_number = 1;
+static uint32_t pid_number = 1;
 
 static uint8_t current = 1;
 static uint8_t init_was_called = 0;
@@ -91,13 +92,13 @@ uint64_t choose_next_process(uint64_t previous_process_SP) {
     return SP_to_return;
 }
 
-uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress, uint8_t background, uint8_t parent_pid_key) {
-    
+uint32_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress, uint8_t background, uint8_t parent_pid_key, uint64_t stack_start) {
     // we initialize the array "all_blocks" with all DEAD-processes
     if(first_call_to_create_PCB) {
-        for (int i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
+        for (uint8_t i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
             all_blocks[i].state = DEAD;
             all_blocks[i].stackPointer = 0;
+            all_blocks[i].stackStart = 0;
             all_blocks[i].basePointer = 0;
             all_blocks[i].PID = 0;
             all_blocks[i].son_of_PID = 0;
@@ -112,7 +113,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
         }
     }
 
-    int i;
+    uint8_t i;
     for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].state == DEAD){  // we find the first empty position in the PCB's array
             break;
@@ -123,6 +124,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
         // we fill the PCB with the required info
         all_blocks[i].state = READY;
         all_blocks[i].stackPointer = stackPointerAddress;
+        all_blocks[i].stackStart = stack_start;
         all_blocks[i].basePointer = stackPointerAddress;
         all_blocks[i].PID = pid_number;
         pid_number++;
@@ -142,7 +144,7 @@ uint8_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddress
             _hlt();
             // the caller process will only continue when its new FG child executes exit(), which will unblock caller process
         }
-        return 0;
+        return all_blocks[i].PID;
     } else {
         drawString("ERROR in create_PCB_and_insert_it_on_scheduler_queue: no more PCBs available\n");
         return 1;
@@ -189,7 +191,7 @@ uint8_t get_pid_key() {
     return 0; // just to keep warnings silent
 }
 
-uint16_t getpid(uint8_t pid_key) {
+uint32_t getpid(uint8_t pid_key) {
     return all_blocks[pid_key].PID;
 }
 
@@ -197,12 +199,11 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
     all_blocks[index].state = state;
     if(state == DEAD) {
         // it means that a process executed an exit()
-        uint16_t PID_of_parent = all_blocks[index].son_of_PID;
+        uint32_t PID_of_parent = all_blocks[index].son_of_PID;
         uint8_t i;
         for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
             if(all_blocks[i].PID == PID_of_parent) {
                 if(foreground_process == index) {
-                    drawString("no se deberia ver\n");
                     all_blocks[i].state = READY;
                     foreground_process = i;
                     break;
@@ -212,9 +213,11 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
     }
 }
 
-uint64_t change_process_state_with_PID(uint16_t PID, uint8_t state) {
+uint64_t change_process_state_with_PID(uint32_t PID, uint8_t state) {
     for(int i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].PID == PID && all_blocks[i].state != DEAD) {
+            if(state == DEAD)
+                free( (void*) (all_blocks[i].stackStart) );
             all_blocks[i].state = state;
             return 0;
         }
@@ -222,7 +225,7 @@ uint64_t change_process_state_with_PID(uint16_t PID, uint8_t state) {
     return 1;
 }
 
-uint8_t get_state(uint16_t PID) {
+uint8_t get_state(uint32_t PID) {
     for(int i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].PID == PID && all_blocks[i].state != DEAD) {
             return all_blocks[i].state;

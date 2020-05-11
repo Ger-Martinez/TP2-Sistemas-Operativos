@@ -3,13 +3,15 @@
 #include "string.h"
 #include <stdint.h>
 #include "test_mm.h"
+#include "test_processes.h"
 #include "semaphores.h"
 
 char * descriptions[NUMBER_OF_COMMANDS] = 
 { 
     "imprime el estado de la memoria",
     "mata a un proceso segun su PID",
-    "TEST: test_mm prueba la Memory Manager", 
+    "TEST: test_mm prueba la Memory Manager",
+    "TEST: test_processes prueba el bloqueo, creacion y destruccion de procesos",
     "bloquea otro proceso dado su PID",
     "lista todos los procesos existentes",
     "imprime un saludo cada algunos segundos",
@@ -33,6 +35,7 @@ static void mem();
 static void kill(char* PID);
 static void block(char* parameter, uint8_t pid_key);
 static void testing_mm(uint8_t background, uint8_t pid_key);
+static void testing_processes(uint8_t background, uint8_t pid_key);
 static void ps(void);
 static void loop(uint8_t background, uint8_t pid_key);
 static void nice();
@@ -51,94 +54,133 @@ extern uint16_t syscall_getpid(uint8_t pid_key);
 extern uint64_t syscall_nice(uint8_t pid, uint8_t priority);
 extern uint64_t syscall_exit(uint8_t pid_key);
 
-void execute_command(int command, char* parameter, uint8_t pid_key, int background) {
-    switch(command){
-        case 0:{
-            mem();
-            break;
-        }
-        case 1:{
-            kill(parameter);
-            break;
-        }
-        case 2:{
-            testing_mm(background, pid_key);
-            break;
-        }
-        case 3:{
-            block(parameter, pid_key);
-            break;
-        }
-        case 4:{
-            ps();
-            break;
-        }
-        case 5:{
-            loop(background, pid_key);
-            break;
-        }
-        case 6:{
-            nice();
-            break;
-        }
-        case 7:{
-            inforeg();
-            break;
-        }
-        case 8:{
-            help();
-            break;
-        }
-        case 9:{
-            exception0();
-            break;
-        }
-        case 10:{
-            exception6();
-            break;
-        }
-        case 11:{
-            printmem(parameter);
-            break;
-        }
-        case 12:{
-            showTime();
-            break;
-        }
-        case 13:{
-            test(pid_key);
-            break;
+void execute_command(int commands_to_execute[2], uint8_t number_of_commands_to_execute, 
+                        char* parameter, uint8_t pid_key, int background) {
+    if(number_of_commands_to_execute == 1) {
+        // we do what we have been doing in Arqui
+        switch(commands_to_execute[0]){
+            case 0:{
+                mem();
+                break;
+            }
+            case 1:{
+                kill(parameter);
+                break;
+            }
+            case 2:{
+                testing_mm(background, pid_key);
+                break;
+            }
+            case 3:{
+                testing_processes(background, pid_key);
+                break;
+            }
+            case 4:{
+                block(parameter, pid_key);
+                break;
+            }
+            case 5:{
+                ps();
+                break;
+            }
+            case 6:{
+                loop(background, pid_key);
+                break;
+            }
+            case 7:{
+                nice();
+                break;
+            }
+            case 8:{
+                inforeg();
+                break;
+            }
+            case 9:{
+                help();
+                break;
+            }
+            case 10:{
+                exception0();
+                break;
+            }
+            case 11:{
+                exception6();
+                break;
+            }
+            case 12:{
+                printmem(parameter);
+                break;
+            }
+            case 13:{
+                showTime();
+                break;
+            }
+            case 14:{
+                test(pid_key);
+                break;
+            }
         }
     }
 }
 
-void process_A_code(uint8_t pid_key) {
-    uint8_t pid = syscall_getpid(pid_key);
+static void process_A_code(uint8_t pid_key) {
+    uint16_t pid = syscall_getpid(pid_key);
     int ret = create_semaphore(2, 1);
     if(ret == -1) {
-        print("EEROR: NO SE PUDO CREAR EL SEMAFORO\n");
-        return;
+        print("ERROR: NO SE PUDO CREAR EL SEMAFORO\n");
+        syscall_exit(pid_key);
+    } else if(ret == 1){
+        print("PROCESO A SE INTENTO CONECTAR A UN SEMAFORO QUE YA EXISTIA, PERO NO IMPORTA\n");
     }
 
     sem_wait(1, pid);
+    print("\nYA PASE EL PRIMER SEM_WAIT\n");
+    sem_wait(1, pid);
+    //sem_wait(1, pid);
+
+    /*sem_wait(1, pid);
     sem_wait(1, pid);
     sem_post(1, pid);
-    sem_wait(1, pid);
+    sem_wait(1, pid);*/
     // no deberia bloquear mas
 
     ret = destroy_semaphore(1);
     if(ret == 1)
-        print("EEROR: NO SE PUDO DESTRUIR EL SEMAFORO\n");
+        print("ERROR: PROCESO A NO PUDO DESTRUIR EL SEMAFORO\n");
+    syscall_exit(pid_key);
+}
+
+static void process_B_code(uint8_t pid_key) {
+    uint16_t pid = syscall_getpid(pid_key);
+    int ret = create_semaphore(2, 1);
+    if(ret == -1) {
+        print("ERROR: NO SE PUDO CREAR EL SEMAFORO\n");
+        syscall_exit(pid_key);
+    } else if(ret == 1){
+        print("PROCESO B SE INTENTO CONECTAR A UN SEMAFORO QUE YA EXISTIA, PERO NO IMPORTA\n");
+    }
+
+
+
+
+
+    ret = destroy_semaphore(1);
+    if(ret == 1)
+        print("ERROR: PROCESO B NO PUDO DESTRUIR EL SEMAFORO\n");
     syscall_exit(pid_key);
 }
 
 static void test(uint8_t pid_key) {
     void (*foo)(uint8_t);
-    foo = process_A_code;
-    int ret = syscall_create_process((uint64_t)foo, 1, pid_key);
-    if(ret == 1) {
-        print("ERRORRRRRRRRR\n");
-    }
+    void (*foo2)(uint8_t);
+    foo  = process_A_code;
+    foo2 = process_B_code;
+    uint32_t ret = syscall_create_process((uint64_t)foo, 1, pid_key);
+    if(ret == 1)
+        print("ERROR AL CREAR PROCESS_A\n");
+    /*ret = syscall_create_process((uint64_t)foo2, 1, pid_key);
+    if(ret == 1)
+        print("ERROR AL CREAR PROCESS_B\n");*/
 }
 
 
@@ -192,12 +234,21 @@ static void testing_mm(uint8_t background, uint8_t pid_key) {
     void (*p)(void);
     p = test_mm;
     // we create a process, which will start its execution on the "test_mm" function
-    int ret = syscall_create_process((uint64_t)p, background, pid_key);
+    uint32_t ret = syscall_create_process((uint64_t)p, background, pid_key);
     if(ret == 1) {
         print("ERROR: could not create process \"test_mm\"\n");
     }
 }
 
+static void testing_processes(uint8_t background, uint8_t pid_key) {
+    void (*p)(uint8_t);
+    p = test_processes;
+    // we create a process, which will start its execution on the "test_processes" function
+    uint32_t ret = syscall_create_process((uint64_t)p, background, pid_key);
+    if(ret == 1) {
+        print("ERROR: could not create process \"test_processes\"\n");
+    }
+}
 
 static void block(char* PID, uint8_t pid_key) {
     if(strcmp(PID, "X") == 0) {

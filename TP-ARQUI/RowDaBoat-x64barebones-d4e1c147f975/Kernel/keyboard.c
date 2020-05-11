@@ -43,6 +43,10 @@ void keyboard_handler(void){
     buffer = letra;  // añado la letra al buffer
 }
 
+uint8_t buffer_is_empty() {
+    return buffer == -1;
+}
+
 char get_keyboard_buffer(void) {
     char aux = buffer;
     buffer = -1;

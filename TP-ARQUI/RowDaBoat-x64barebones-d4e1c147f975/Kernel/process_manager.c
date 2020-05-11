@@ -13,7 +13,7 @@ extern void _hlt();
 // quick way of returning error if no more processes can be created
 static uint8_t number_of_free_processes = MAX_NUMBER_OF_PROCESSES;
 
-uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
+uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
     if(number_of_free_processes == 0) {
         return 1;
     }
@@ -39,7 +39,7 @@ uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
         new_stack_address = configure_stack( (uint64_t)process_stack_start , RIP , new_pid_key);
     
         number_of_free_processes--;
-        uint8_t ret = create_PCB_and_insert_it_on_scheduler_queue(new_stack_address, background, pid_key);
+        uint32_t ret = create_PCB_and_insert_it_on_scheduler_queue(new_stack_address, background, pid_key, (uint64_t)process_stack_end);
         if(ret == 1) {
             drawString("ERROR in create_process: could not create PCB\n");
             free(process_stack_end);
@@ -51,7 +51,7 @@ uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
         if(background == 0){
             free(process_stack_end);
         }
-        return 0;
+        return ret;
     }
 }
 
@@ -63,20 +63,26 @@ void exit_process(uint8_t pid_key) {
     }
 }
 
-uint64_t kill_process(uint16_t PID) {
+uint64_t kill_process(uint32_t PID) {
     number_of_free_processes++;
     return change_process_state_with_PID(PID, DEAD);
 }
 
-uint64_t negate_state(uint16_t PID_to_block, uint16_t PID_of_calling_process) {
+uint64_t negate_state(uint32_t PID_to_block, uint32_t PID_of_calling_process) {
     uint8_t state = get_state(PID_to_block);
+    uint8_t ret;
     if(state == 1)
         return 1;
 
     if(state == READY)
-        change_process_state_with_PID(PID_to_block, BLOCKED);
+        ret = change_process_state_with_PID(PID_to_block, BLOCKED);
     else if(state == BLOCKED)
-        change_process_state_with_PID(PID_to_block, READY);
+        ret = change_process_state_with_PID(PID_to_block, READY);
+    else
+        return 1;
+    
+    if(ret == 1)
+        return 1;
 
     if(PID_to_block == PID_of_calling_process) {
         while(1){
