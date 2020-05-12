@@ -6,28 +6,15 @@ EXTERN num_to_string
 
 section .text
 
-
-; rdi = lock
-; rsi = pid
 enter_region:
     push rbp
     mov rbp, rsp
     ;push rdi
     push rbx
 
-    ; push rdi
-    ; push rcx
-    ; mov rcx, [rdi]
-    ; mov rdi, rcx
-    ; call num_to_string
-    ; mov rdi, rax
-    ; call print
-    ; pop rcx
-    ; pop rdi
-
     ; hacemos un intercambio entre un registro y una variable de forma ATOMICA
     mov rbx, 1
-    xchg rbx, [rdi]  ; xchg 1, lock              ; aux <- 1
+    xchg bl, [rdi]  ; xchg 1, lock              ; aux <- rbx
                                                  ; rbx <- [rdi]    FUNCIONA MAL
                                                  ; [rdi] <- aux    FUNCIONA BIEN
     

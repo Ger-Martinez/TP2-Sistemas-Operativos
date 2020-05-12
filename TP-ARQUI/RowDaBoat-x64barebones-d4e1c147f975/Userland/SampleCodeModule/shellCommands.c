@@ -136,7 +136,7 @@ static void process_A_code(uint8_t pid_key) {
     sem_wait(1, pid);
     print("\nYA PASE EL PRIMER SEM_WAIT\n");
     sem_wait(1, pid);
-    //sem_wait(1, pid);
+    sem_wait(1, pid);
 
     /*sem_wait(1, pid);
     sem_wait(1, pid);

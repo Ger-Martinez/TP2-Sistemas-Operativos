@@ -41,7 +41,7 @@ static uint8_t foreground_process = 0;
 uint64_t schedule_processes(uint64_t previous_process_SP) {
     timer_handler();  // el handler de Timer Tick del TP de arqui sigue estando
    
-    if(all_blocks[current-1].ageing > 1) {
+    if(all_blocks[current-1].ageing > 1 && all_blocks[current-1].state == READY){
         all_blocks[current-1].ageing --;
         return previous_process_SP;
     }

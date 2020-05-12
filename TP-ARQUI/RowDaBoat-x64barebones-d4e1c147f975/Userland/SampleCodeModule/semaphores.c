@@ -7,7 +7,7 @@ extern uint64_t syscall_block(uint16_t PID, uint16_t PID_of_calling_process);
 static uint8_t queue_process(uint16_t pid, uint8_t index);
 static void dequeue_process(uint8_t index, uint16_t pid_of_calling_process);
 extern uint8_t leave_region();
-extern uint8_t enter_region(uint8_t* lock, uint16_t pid_of_calling_process);
+extern uint8_t enter_region(uint8_t * lock);
 ////////////
 extern char* num_to_string(int num);
 //////////
@@ -106,15 +106,30 @@ uint8_t sem_wait(uint8_t sem_id, uint16_t pid) {
     if(index_of_sem == MAX_NUMBER_OF_SEMAPHORES)
         return 1;
     
+
     // if lock != 0, then we block ourselves. If lock == 0, then we pass and now lock=1
-    print(num_to_string(semaphores[index_of_sem].lock )); print("\n");
+    print("\n lock antes del enter_region = ");
+    print(num_to_string( semaphores[index_of_sem].lock )); 
+    print("\n");
     //print(num_to_string((uint64_t)&(semaphores[index_of_sem].lock))); print("\n");
 
-    // ret = enter_region( semaphores[index_of_sem].lock , pid);
-     ret = enter_region( &(semaphores[index_of_sem].lock) , pid);
 
-    print("\n"); print(num_to_string(semaphores[index_of_sem].lock )); print("\n");
+
+    // ret = enter_region( semaphores[index_of_sem].lock );
+     ret = enter_region( &(semaphores[index_of_sem].lock) );
+
+
+
+
+    print("\n lock despues del enter_region = "); 
+    print(num_to_string( semaphores[index_of_sem].lock )); 
+    print("\n");
     //print(num_to_string((uint64_t)&(semaphores[index_of_sem].lock))); print("\n");
+
+
+
+
+
 
     if(ret == 1) {
         ret = queue_process(pid, index_of_sem);
