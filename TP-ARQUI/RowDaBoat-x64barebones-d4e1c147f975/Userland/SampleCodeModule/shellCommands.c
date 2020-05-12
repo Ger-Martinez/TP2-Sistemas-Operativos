@@ -5,6 +5,7 @@
 #include "test_mm.h"
 #include "test_processes.h"
 #include "semaphores.h"
+#include "pipes.h"
 
 char * descriptions[NUMBER_OF_COMMANDS] = 
 { 
@@ -16,6 +17,7 @@ char * descriptions[NUMBER_OF_COMMANDS] =
     "lista todos los procesos existentes",
     "imprime un saludo cada algunos segundos",
     "cambia la prioridad de un proceso",
+    "imprime en pantalla las propiedades de todos los semaforos existentes",
     "Imprime en pantalla el valor actual de todos los registros", 
     "Muestra todos los distintos programas disponibles", 
     "Verifica el funcionamiento de la rutina de excepcion de la division por cero", 
@@ -39,6 +41,7 @@ static void testing_processes(uint8_t background, uint8_t pid_key);
 static void ps(void);
 static void loop(uint8_t background, uint8_t pid_key);
 static void nice();
+static void cat(uint8_t pid_key);
 static void test(uint8_t pid_key);
 
 extern uint64_t syscall_read(int, char*, int);
@@ -56,8 +59,15 @@ extern uint64_t syscall_exit(uint8_t pid_key);
 
 void execute_command(int commands_to_execute[2], uint8_t number_of_commands_to_execute, 
                         char* parameter, uint8_t pid_key, int background) {
-    if(number_of_commands_to_execute == 1) {
-        // we do what we have been doing in Arqui
+
+    if(number_of_commands_to_execute > 2)
+        print("Impossible\n");
+    else if(number_of_commands_to_execute == 2)
+        create_pipe(commands_to_execute[0], commands_to_execute[1]);
+    
+    // if only one command will be executed, then the functionality is the same as the Arqui project
+    while(number_of_commands_to_execute > 0) {
+        number_of_commands_to_execute--;
         switch(commands_to_execute[0]){
             case 0:{
                 mem();
@@ -92,35 +102,74 @@ void execute_command(int commands_to_execute[2], uint8_t number_of_commands_to_e
                 break;
             }
             case 8:{
-                inforeg();
+                list_all_semaphores();
                 break;
             }
             case 9:{
-                help();
+                cat(pid_key);
                 break;
             }
             case 10:{
-                exception0();
+                inforeg();
                 break;
             }
             case 11:{
-                exception6();
+                help();
                 break;
             }
             case 12:{
-                printmem(parameter);
+                exception0();
                 break;
             }
             case 13:{
-                showTime();
+                exception6();
                 break;
             }
             case 14:{
+                printmem(parameter);
+                break;
+            }
+            case 15:{
+                showTime();
+                break;
+            }
+            case 16:{
                 test(pid_key);
                 break;
             }
         }
     }
+}
+
+// NO tiene validaciones de \b como la shell --> escribir cosas faciles
+static void cat_code(uint8_t pid_key) {
+    char buffer[128] = {'\0'};
+    int k = 0;
+    char c;
+    while(1) {
+        c = getChar();
+        if(c != -1) {
+            if(c == '_') {    // El guion bajo simula un EOF
+                buffer[k] = '\0';
+                print("\n Cat returns:\n\n");
+                print(buffer);
+                syscall_exit(pid_key);
+            }
+            putchar(c);
+            buffer[k++] = c;
+        } else
+            print("Now that we have blocking-READ, this text should never be seen\n");
+    }
+}
+
+static void cat(uint8_t pid_key) {
+    print("Start writing something. When you are ready, type the underscore _\n");
+    void (*foo)(uint8_t);
+    foo = cat_code;
+    // create a process in FOREGROUND
+    uint32_t ret = syscall_create_process((uint64_t)foo, 0, pid_key);
+    if(ret == 1)
+        print("ERROR AL CREAR PROCESO\n");
 }
 
 static void process_A_code(uint8_t pid_key) {
@@ -133,20 +182,13 @@ static void process_A_code(uint8_t pid_key) {
         print("PROCESO A SE INTENTO CONECTAR A UN SEMAFORO QUE YA EXISTIA, PERO NO IMPORTA\n");
     }
 
-    sem_wait(1, pid);
-    print("\nYA PASE EL PRIMER SEM_WAIT\n");
-    sem_wait(1, pid);
-    sem_wait(1, pid);
-
-    /*sem_wait(1, pid);
-    sem_wait(1, pid);
-    sem_post(1, pid);
-    sem_wait(1, pid);*/
-    // no deberia bloquear mas
+    ret = sem_wait(1, pid);
+    ret = sem_wait(1, pid);
+    ret = sem_wait(1, pid);
 
     ret = destroy_semaphore(1);
     if(ret == 1)
-        print("ERROR: PROCESO A NO PUDO DESTRUIR EL SEMAFORO\n");
+        print("ERROR: PROCESO A NO PUDO DESTRUIR EL SEMAFORO. SEGURO ALGUIEN MAS LO HIZO\n");
     syscall_exit(pid_key);
 }
 
@@ -160,27 +202,28 @@ static void process_B_code(uint8_t pid_key) {
         print("PROCESO B SE INTENTO CONECTAR A UN SEMAFORO QUE YA EXISTIA, PERO NO IMPORTA\n");
     }
 
-
-
-
+    sem_post(1, pid);
 
     ret = destroy_semaphore(1);
     if(ret == 1)
-        print("ERROR: PROCESO B NO PUDO DESTRUIR EL SEMAFORO\n");
+        print("ERROR: PROCESO B NO PUDO DESTRUIR EL SEMAFORO. SEGURO ALGUIEN MAS LO HIZO\n");
     syscall_exit(pid_key);
 }
 
+static char buffer[128] = {'\0'};
+
 static void test(uint8_t pid_key) {
-    void (*foo)(uint8_t);
+    /* void (*foo)(uint8_t);
     void (*foo2)(uint8_t);
     foo  = process_A_code;
     foo2 = process_B_code;
     uint32_t ret = syscall_create_process((uint64_t)foo, 1, pid_key);
     if(ret == 1)
         print("ERROR AL CREAR PROCESS_A\n");
-    /*ret = syscall_create_process((uint64_t)foo2, 1, pid_key);
+    ret = syscall_create_process((uint64_t)foo2, 1, pid_key);
     if(ret == 1)
-        print("ERROR AL CREAR PROCESS_B\n");*/
+        print("ERROR AL CREAR PROCESS_B\n"); */
+   print("el test no esta haciendo nada ahora\n");
 }
 
 

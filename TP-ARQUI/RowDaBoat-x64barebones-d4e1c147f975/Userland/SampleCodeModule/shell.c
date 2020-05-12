@@ -26,7 +26,7 @@ static void shell_main(uint8_t pid_key) {
     uint8_t background = 0;
     while(1) {
         c = getChar();
-        if(c != -1) {   // TODO: ESTO CREO QUE SE PUEDE SACAR
+        if(c != -1) {
             if(c == '\n') {
                 putchar(c);     // print the '\n' to move to the next line
                 shell_buffer[k++] = '\0';
@@ -52,7 +52,8 @@ static void shell_main(uint8_t pid_key) {
                     putchar(c);
                 }
             }
-        }
+        } else
+            print("Now that the shell blocks when it cannot READ, this text should never be seen\n");
     }
 }
 

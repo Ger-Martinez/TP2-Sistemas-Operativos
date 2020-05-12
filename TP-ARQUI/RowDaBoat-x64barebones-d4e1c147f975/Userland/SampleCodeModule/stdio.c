@@ -1,4 +1,3 @@
-//#include "lib.h"
 #include "string.h"
 
 #define STD_INPUT 0

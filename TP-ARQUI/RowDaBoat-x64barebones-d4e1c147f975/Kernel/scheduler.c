@@ -141,7 +141,11 @@ uint32_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddres
         if(background == 0) {
             all_blocks[parent_pid_key].state = BLOCKED;
             foreground_process = i;
-            _hlt();
+            while(1){
+                if(all_blocks[parent_pid_key].state == READY)
+                    break;
+                _hlt();
+            }
             // the caller process will only continue when its new FG child executes exit(), which will unblock caller process
         }
         return all_blocks[i].PID;
@@ -199,6 +203,7 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
     all_blocks[index].state = state;
     if(state == DEAD) {
         // it means that a process executed an exit()
+        free( (void*) (all_blocks[index].stackStart) );
         uint32_t PID_of_parent = all_blocks[index].son_of_PID;
         uint8_t i;
         for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {

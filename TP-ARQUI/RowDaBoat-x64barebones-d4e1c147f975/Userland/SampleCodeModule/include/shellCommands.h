@@ -1,7 +1,7 @@
 #ifndef SHELL_COMMANDS_H
 #define SHELL_COMMANDS_H
 
-#define NUMBER_OF_COMMANDS 15
+#define NUMBER_OF_COMMANDS 17
 #include <stdint.h>
 
 void execute_command(int commands_to_execute[2], uint8_t number_of_commands_to_execute, 
@@ -17,6 +17,8 @@ static char* all_commands[] =
     "ps",
     "loop",
     "nice",
+    "sem",
+    "cat",
     "inforeg", 
     "help",
     "exception0", 
