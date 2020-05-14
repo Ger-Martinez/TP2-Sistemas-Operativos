@@ -54,14 +54,22 @@ syscall_create_process:
     mov rbp, rsp
     push rbx
     push rcx
+    push rdx
+    push r8
+    push r9
 
     mov rax, 2    ; le paso el ID
     mov rbx, rdi  ; le paso la direccion a la que debe apuntar el RIP
+    mov r9, rcx   ; backup de rcx
     mov rcx, rsi  ; le paso si es de FG o BG
     mov rdx, rdx  ; le paso el pid_key para que este proceso pueda bloquearse, en caso que se cree un proceso en FG
+    mov r8, r9    ; le paso a donde debe escribir/leer este nuevo proceso
     int 80h
     mov rax, rax  ; syscall has a return value
 
+    pop r9
+    pop r8
+    pop rdx
     pop rcx
     pop rbx
     mov rsp, rbp

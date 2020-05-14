@@ -1,6 +1,5 @@
-#include <stdio.h>
-#include "test_util.h"
 #include "stdio.h"
+#include "test_util.h"
 
 #define MAX_PROCESSES 18 //Should be around 80% of the the processes handled by the kernel
 
@@ -42,7 +41,7 @@ void test_processes(uint8_t pid_key){
       p_rqs[rq].pid = syscall_create_process((uint64_t)foo, 1, pid_key);
 
       if (p_rqs[rq].pid == 1){
-        print("Error creating process\n");
+        print(STD_ERR, "Error creating process\n");
         syscall_exit(pid_key);
       }else{
         p_rqs[rq].state = RUNNING;
@@ -61,7 +60,7 @@ void test_processes(uint8_t pid_key){
           case 0:{
             if (p_rqs[rq].state == RUNNING || p_rqs[rq].state == BLOCKED){
               if(syscall_kill(p_rqs[rq].pid) == 1){
-                print("Error killing process\n");
+                print(STD_ERR, "Error killing process\n");
                 syscall_exit(pid_key);
               }
               p_rqs[rq].state = KILLED; 
@@ -72,7 +71,7 @@ void test_processes(uint8_t pid_key){
           case 1:{
             if (p_rqs[rq].state == RUNNING){
               if(syscall_block(p_rqs[rq].pid, this_process_PID) == 1){
-                print("Error blocking process\n");
+                print(STD_ERR, "Error blocking process\n");
                 syscall_exit(pid_key);
               }
               p_rqs[rq].state = BLOCKED;
@@ -86,7 +85,7 @@ void test_processes(uint8_t pid_key){
       for(rq = 0; rq < MAX_PROCESSES; rq++){
         if (p_rqs[rq].state == BLOCKED/* && GetUniform(2) % 2*/){
           if(syscall_block(p_rqs[rq].pid, this_process_PID) == 1){
-            print("Error unblocking process\n");
+            print(STD_ERR, "Error unblocking process\n");
             syscall_exit(pid_key);
           }
           p_rqs[rq].state = RUNNING;
@@ -94,6 +93,6 @@ void test_processes(uint8_t pid_key){
       }
     }
   }
-  print("JAMAS\n");
+  print(STD_ERR, "JAMAS\n");
   syscall_exit(pid_key);
 }

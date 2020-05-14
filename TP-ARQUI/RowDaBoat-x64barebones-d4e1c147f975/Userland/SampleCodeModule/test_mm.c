@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "stdio.h"
 #include <string.h>
 #include "test_util.h"
 
@@ -41,7 +41,7 @@ void test_mm(){
         for (i = 0; i < rq; i++)
             if (mm_rqs[i].address != NULL)
                 if(!memcheck(mm_rqs[i].address, i, mm_rqs[i].size))
-                     print("ERROR!\n"); // TODO: Port this call as required
+                     print(STD_ERR, "ERROR!\n"); // TODO: Port this call as required
 
         // Free
         for (i = 0; i < rq; i++)

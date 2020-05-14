@@ -9,7 +9,6 @@ extern char endOfBinary;
 int main();
 
 int _start(uint8_t pid_key) {
-
 	//Clean BSS
 	memset(&bss, 0, &endOfBinary - &bss);
 

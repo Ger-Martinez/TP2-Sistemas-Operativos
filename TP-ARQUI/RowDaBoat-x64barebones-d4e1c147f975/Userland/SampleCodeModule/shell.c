@@ -16,7 +16,7 @@ static int commands_to_execute[2] = {0}; // normally, only one command is run, u
 static uint8_t number_of_commands_to_execute = 0;
 
 void start_shell(uint8_t pid_key) {
-    print(">>");
+    print(STD_OUTPUT, ">>");
     shell_main(pid_key);
 }
 
@@ -25,35 +25,35 @@ static void shell_main(uint8_t pid_key) {
     char* parameter = "X";
     uint8_t background = 0;
     while(1) {
-        c = getChar();
+        c = getChar(STD_INPUT);
         if(c != -1) {
             if(c == '\n') {
-                putchar(c);     // print the '\n' to move to the next line
+                putchar(STD_OUTPUT, c);     // print the '\n' to move to the next line
                 shell_buffer[k++] = '\0';
                 
                 search_command(shell_buffer, parameter, &background);
                 if(number_of_commands_to_execute != 0)
                     execute_command(commands_to_execute, number_of_commands_to_execute, parameter, pid_key, background);
                 else
-                    print("   Command not found");
-                putchar(c);  // print the '\n' to move to the next line
+                    print(STD_OUTPUT, "   Command not found");
+                putchar(STD_OUTPUT, c);  // print the '\n' to move to the next line
 
                 restart_resources_used(&background);
                 parameter = "X";
-                print(">>");
+                print(STD_OUTPUT, ">>");
             }
             else if(c=='\b' && k>0) {
                 shell_buffer[k--] = '\0';
-                putchar(c);
+                putchar(STD_OUTPUT, c);
             }
             else { // it is a normal character
                 if(k < SHELL_BUFFER_SIZE) {
                     shell_buffer[k++] = c;
-                    putchar(c);
+                    putchar(STD_OUTPUT, c);
                 }
             }
         } else
-            print("Now that the shell blocks when it cannot READ, this text should never be seen\n");
+            print(STD_ERR, "Now that the shell blocks when it cannot READ, this text should never be seen\n");
     }
 }
 

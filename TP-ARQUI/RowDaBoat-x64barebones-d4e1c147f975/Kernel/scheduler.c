@@ -195,7 +195,13 @@ uint8_t get_pid_key() {
     return 0; // just to keep warnings silent
 }
 
-uint32_t getpid(uint8_t pid_key) {
+uint32_t getpid(int pid_key) {
+    
+    if(pid_key == -1) 
+        return pid_number;
+    else if(pid_key == -2)
+        return pid_number + 1;
+    
     return all_blocks[pid_key].PID;
 }
 

@@ -7,13 +7,13 @@
 #define PROCESS_EXISTS 1
 #define PROCESS_NOT_EXISTS 0
 
-extern uint64_t configure_stack(uint64_t, uint64_t, uint8_t);
+extern uint64_t configure_stack(uint64_t, uint64_t, uint8_t, uint8_t);
 extern void _hlt();
 
 // quick way of returning error if no more processes can be created
 static uint8_t number_of_free_processes = MAX_NUMBER_OF_PROCESSES;
 
-uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
+uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key, uint8_t input_output_ID) {
     if(number_of_free_processes == 0) {
         return 1;
     }
@@ -36,20 +36,14 @@ uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
 
         // push everything in the new stack, preparing the new process for the TT's "pushState" and "iretq"
         uint64_t new_stack_address;
-        new_stack_address = configure_stack( (uint64_t)process_stack_start , RIP , new_pid_key);
-    
+        new_stack_address = configure_stack( (uint64_t)process_stack_start , RIP , new_pid_key, input_output_ID);
+
         number_of_free_processes--;
         uint32_t ret = create_PCB_and_insert_it_on_scheduler_queue(new_stack_address, background, pid_key, (uint64_t)process_stack_end);
         if(ret == 1) {
             drawString("ERROR in create_process: could not create PCB\n");
             free(process_stack_end);
             return 1;
-        }
-
-        /* if create_process was called with parameter background==0, then the new process was meant to be created in FG.
-            So, we are returning here once the new FG process finishes. So, me must free its stack. */
-        if(background == 0){
-            free(process_stack_end);
         }
         return ret;
     }

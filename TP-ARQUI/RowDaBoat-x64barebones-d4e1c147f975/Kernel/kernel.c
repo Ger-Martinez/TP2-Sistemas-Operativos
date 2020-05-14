@@ -90,7 +90,7 @@ void * initializeKernelBinary() {
 
 int main() {
 	// create the first process which is the SHELL
-	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0);
+	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0 , 0);
 	if(first_process == 1) {
 		drawString("SHELL WAS NOT CREATED --> ABORT");
 		haltcpu();
