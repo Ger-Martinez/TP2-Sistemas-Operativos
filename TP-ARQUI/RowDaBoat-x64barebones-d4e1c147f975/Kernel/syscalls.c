@@ -82,7 +82,7 @@ static uint64_t read_syscall(int where_to_read, char* where_to_store) {
             }
             // we arrive here once the keyboard_buffer has a letter, and the process that made this READ is unblocked
             where_to_store[0] = get_keyboard_buffer();
-            return 0; 
+            return 0; // success
         }
         case RTC:{
             /* Arqui legacy */
@@ -95,11 +95,10 @@ static uint64_t read_syscall(int where_to_read, char* where_to_store) {
             where_to_store[4]=min%10 + 0x30;
 			where_to_store[6]=seg/10 + 0x30; 
             where_to_store[7]=seg%10 + 0x30;
-			return 6;
+			return 0; // success
         }
         default:{
-            // we just add this to keep warnings quiet
-            return 0;
+            return 1; // error
         }
     }
 }

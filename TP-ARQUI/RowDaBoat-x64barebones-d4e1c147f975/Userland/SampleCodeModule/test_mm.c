@@ -7,12 +7,28 @@
 
 extern void* syscall_malloc(uint64_t);
 extern uint64_t syscall_free(void*);
+extern uint64_t syscall_create_process(uint64_t, int, uint8_t, uint8_t);
+void test_mm();
 
 typedef struct MM_rq{
     void *address;
     uint32_t size;
 }mm_rq;
 
+
+// command
+void testing_mm(uint8_t background, uint8_t pid_key) {
+    void (*p)(void);
+    p = test_mm;
+    // we create a process, which will start its execution on the "test_mm" function
+    uint32_t ret = syscall_create_process((uint64_t)p, background, pid_key, STD_OUTPUT);
+    if(ret == 1) {
+        print(STD_ERR, "ERROR: could not create process \"test_mm\"\n");
+    }
+}
+
+
+// process code
 void test_mm(){
     mm_rq mm_rqs[MAX_BLOCKS];
     uint8_t rq;

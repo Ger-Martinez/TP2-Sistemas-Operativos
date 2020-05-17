@@ -29,11 +29,12 @@ static int characters_already_written = 0;
 static const int FONT_COLOR = 0xFFFFFF;
 static const int BACKGROUND_COLOR = 0x000000;
 
+/*   DEPRECATED for this project
 void init_screen_driver(unsigned int screen_width_in_pixels, unsigned int screen_height_in_pixels) {
     screen_height_in_characters = screen_height_in_pixels / CHAR_HEIGHT;
     screen_width_in_characters = screen_width_in_pixels / CHAR_WIDTH;
-    // drawStringInSpecificSpot(300, 300, "estoy en init_screen_driver", FONT_COLOR, BACKGROUND_COLOR);
 }
+*/
 
 void drawChar(char character, int fontColor, int backgroundColor) {
     if(character == '\n'){
@@ -175,24 +176,6 @@ static void drawCharInSpecificSpot(int x, int y, char character, int fontColor, 
         }
         aux_x = x*CHAR_WIDTH;
         aux_y += 1;
-    }
-}
-
-void drawStringInSpecificSpot(int x, int y, char* string, int fontColor, int backgroundColor){
-    int aux_x = x;
-    for(int i=0; i<strlen(string); i++){
-        drawCharInSpecificSpot(aux_x, y, string[i], fontColor, backgroundColor);
-        aux_x += CHAR_WIDTH;
-    }
-}
-
-void drawNumberInSpecificSpot(int x, int y, int number, int fontColor, int backgroundColor) {
-    int number_length = getNumberLength(number);
-    char* number_converted = num_to_string(number);
-    int aux_x = x;
-    for(int i=0; i<number_length; i++) {
-        drawCharInSpecificSpot(aux_x, y, number_converted[i], fontColor, backgroundColor);
-        aux_x += CHAR_WIDTH;
     }
 }
 

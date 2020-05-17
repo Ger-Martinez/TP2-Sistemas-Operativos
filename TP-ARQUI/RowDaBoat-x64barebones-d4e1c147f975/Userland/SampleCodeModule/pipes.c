@@ -114,3 +114,23 @@ char read_letter_from_pipe(uint8_t pipe_index) {
     } else 
         return current_letter;
 }
+
+void list_all_pipes() {
+    uint8_t i;
+    if(number_of_existing_pipes == 0) {
+        print(STD_OUTPUT, "There are no pipes open\n");
+        return;
+    }
+    
+    print(STD_OUTPUT, "PIPE_ID     WRITING_PROCESS_PID   READING_PROCESS_PID\n");
+    for(i = 0; i < MAX_NUMBER_OF_PIPES; i++) {
+        if(all_pipes[i].pipe_unique_ID != 0) {
+            print(STD_OUTPUT, num_to_string(all_pipes[i].pipe_unique_ID));
+            print(STD_OUTPUT, "                ");
+            print(STD_OUTPUT, num_to_string(all_pipes[i].writing_process_pid));
+            print(STD_OUTPUT, "                ");
+            print(STD_OUTPUT, num_to_string(all_pipes[i].reading_process_pid));
+            print(STD_OUTPUT, "\n");
+        }
+    }
+}

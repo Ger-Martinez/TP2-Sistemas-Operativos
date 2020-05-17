@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void test_processes(uint8_t pid_key);
+void testing_processes(uint8_t background, uint8_t pid_key);
 
 #endif

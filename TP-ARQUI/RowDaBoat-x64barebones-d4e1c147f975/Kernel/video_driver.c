@@ -49,12 +49,14 @@ struct vbe_mode_info_structure {
 
 struct vbe_mode_info_structure * screenData = (void*)0x5C00;
 
+/*    DEPRECATED for this project
 void init_VM_Driver() {
 	SCREEN_bPP = screenData->bpp / 8;
 	SCREEN_HEIGHT = screenData->height;
 	SCREEN_WIDTH = screenData->width;
 	init_screen_driver(SCREEN_WIDTH, SCREEN_HEIGHT);
 }
+*/
 
 void drawPixel(unsigned int x, unsigned int y, int color){
     char* screen = screenData->framebuffer;   // ahora screen apunta al comienzo de la pantalla

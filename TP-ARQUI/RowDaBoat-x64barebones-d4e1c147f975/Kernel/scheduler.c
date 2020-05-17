@@ -5,27 +5,28 @@
 #include "process_manager.h"
 #define NULL ((void*)0)
 #define INIT_STACK_SIZE 256
+#define MINIMUM_PRIORITY 1
 
 uint64_t choose_next_process();
 extern uint64_t configure_stack(uint64_t, void(*foo)(void));
 extern void _hlt(void);
+static uint8_t configure_init_process();
+static void execute_init();
 
 typedef struct process_control_block {
     uint8_t state;
     uint64_t stackPointer;
     uint64_t stackStart;  // will never change. Used for freeing the memory used by the process
     uint32_t PID;
-    uint32_t son_of_PID;
-    uint64_t basePointer;
-    uint8_t priority;
-    uint8_t ageing;
+    uint32_t son_of_PID;  // the PID of this process' parent
+    uint64_t basePointer; // will never change
+    uint8_t priority;    // only changed by the change_priority function
+    uint8_t ageing;      // decrements each time the scheduler  is called
 } PCB;
 
+// the PCB for the INIT process in keeped outside the list
 static PCB init = {READY, 0, 0, 0, 0, 0, 1, 1};
-static uint8_t configure_init_process();
-static void execute_init();
 
-//static void* address_to_store_PBCs = NULL;
 static PCB all_blocks[MAX_NUMBER_OF_PROCESSES];
 
 static uint8_t first_call_to_scheduler = 1;
@@ -33,15 +34,16 @@ static uint8_t first_call_to_create_PCB = 1;
 
 static uint32_t pid_number = 1;
 
-static uint8_t current = 1;
+static uint8_t current = 1;  // current-1 will always point to the last process chosen by the scheduler
 static uint8_t init_was_called = 0;
 
-static uint8_t foreground_process = 0;
+static uint8_t foreground_process = 0;  // the shell is initially the FG process
 
 uint64_t schedule_processes(uint64_t previous_process_SP) {
     timer_handler();  // el handler de Timer Tick del TP de arqui sigue estando
    
     if(all_blocks[current-1].ageing > 1 && all_blocks[current-1].state == READY){
+        // choose the same process
         all_blocks[current-1].ageing --;
         return previous_process_SP;
     }
@@ -127,6 +129,8 @@ uint32_t create_PCB_and_insert_it_on_scheduler_queue(uint64_t stackPointerAddres
         all_blocks[i].stackStart = stack_start;
         all_blocks[i].basePointer = stackPointerAddress;
         all_blocks[i].PID = pid_number;
+        all_blocks[i].priority = 1;
+        all_blocks[i].ageing = all_blocks[i].priority;
         pid_number++;
 
         // the first time we call this function, the SHELL is created, so its parent is init
@@ -197,10 +201,13 @@ uint8_t get_pid_key() {
 
 uint32_t getpid(int pid_key) {
     
-    if(pid_key == -1) 
+    if(pid_key == -1)          // will only be called by the shell
         return pid_number;
-    else if(pid_key == -2)
+    else if(pid_key == -2)     // will only be called by the shell
         return pid_number + 1;
+    
+    else if(pid_key < -2 || pid_key >= MAX_NUMBER_OF_PROCESSES)
+        return 1;  // error
     
     return all_blocks[pid_key].PID;
 }
@@ -215,6 +222,7 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
         for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
             if(all_blocks[i].PID == PID_of_parent) {
                 if(foreground_process == index) {
+                    // our parent process must recover its FG state
                     all_blocks[i].state = READY;
                     foreground_process = i;
                     break;
@@ -225,7 +233,8 @@ void change_process_state_with_INDEX(uint8_t index, uint8_t state) {
 }
 
 uint64_t change_process_state_with_PID(uint32_t PID, uint8_t state) {
-    for(int i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
+    uint8_t i;
+    for(i=0; i<MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].PID == PID && all_blocks[i].state != DEAD) {
             if(state == DEAD)
                 free( (void*) (all_blocks[i].stackStart) );
@@ -233,16 +242,17 @@ uint64_t change_process_state_with_PID(uint32_t PID, uint8_t state) {
             return 0;
         }
     }
-    return 1;
+    return 1;  // error
 }
 
 uint8_t get_state(uint32_t PID) {
-    for(int i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
+    uint8_t i;
+    for(i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].PID == PID && all_blocks[i].state != DEAD) {
             return all_blocks[i].state;
         }
     }
-    return 1;
+    return 1;  // error
 }
 
 uint8_t get_foreground_process() {
@@ -297,13 +307,15 @@ uint64_t ps(void) {
 }
 
 uint64_t change_priority(uint8_t pid, uint8_t priority) {
+    if(priority < MINIMUM_PRIORITY || pid < 2)
+        return 1;  //error
     int i;
     for(i = 0; i < MAX_NUMBER_OF_PROCESSES; i++) {
         if(all_blocks[i].PID == pid) {
             all_blocks[i].priority = priority;
-            all_blocks[i].ageing = priority;
+            //all_blocks[i].ageing = priority;
             return 0;
         }
     }
-    return 1;
+    return 1;  // error
 }

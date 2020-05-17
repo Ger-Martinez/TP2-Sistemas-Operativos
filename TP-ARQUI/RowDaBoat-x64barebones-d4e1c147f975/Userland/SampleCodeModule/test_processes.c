@@ -8,13 +8,7 @@ extern uint64_t syscall_kill(uint32_t PID);
 extern uint64_t syscall_block(uint32_t PID, uint16_t PID_of_calling_process);
 extern uint16_t syscall_getpid(uint8_t pid_key);
 extern uint64_t syscall_exit(uint8_t pid_key);
-/////////////
-extern char* num_to_string(int num);
-//////////////
-
-void endless_loop(){
-  while(1);
-}
+void test_processes(uint8_t pid_key);
 
 enum State {ERROR, RUNNING, BLOCKED, KILLED};
 
@@ -23,6 +17,23 @@ typedef struct P_rq{
   enum State state;
 }p_rq;
 
+
+// command
+void testing_processes(uint8_t background, uint8_t pid_key) {
+    void (*p)(uint8_t);
+    p = test_processes;
+    // we create a process, which will start its execution on the "test_processes" function
+    uint32_t ret = syscall_create_process((uint64_t)p, background, pid_key);
+    if(ret == 1) {
+        print(STD_ERR, "ERROR: could not create process \"test_processes\"\n");
+    }
+}
+
+void endless_loop_for_processes(){
+  while(1);
+}
+
+// process code
 void test_processes(uint8_t pid_key){
   p_rq p_rqs[MAX_PROCESSES];
   uint8_t rq;
@@ -30,11 +41,11 @@ void test_processes(uint8_t pid_key){
   uint8_t action;
 
   void(*foo)(void);
-  foo = endless_loop;
+  foo = endless_loop_for_processes;
 
   uint16_t this_process_PID = syscall_getpid(pid_key);
 
-  while (1){
+  while (1) {
 
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_PROCESSES; rq++){
@@ -54,7 +65,6 @@ void test_processes(uint8_t pid_key){
 
       for(rq = 0; rq < MAX_PROCESSES; rq++){
         action = GetUniform(2) % 2;
-        //print("action = "); print(num_to_string(action)); print("\n");
 
         switch(action){
           case 0:{
@@ -83,7 +93,8 @@ void test_processes(uint8_t pid_key){
 
       // Randomly unblocks processes
       for(rq = 0; rq < MAX_PROCESSES; rq++){
-        if (p_rqs[rq].state == BLOCKED/* && GetUniform(2) % 2*/){
+        if (p_rqs[rq].state == BLOCKED && GetUniform(2) % 2){
+          
           if(syscall_block(p_rqs[rq].pid, this_process_PID) == 1){
             print(STD_ERR, "Error unblocking process\n");
             syscall_exit(pid_key);

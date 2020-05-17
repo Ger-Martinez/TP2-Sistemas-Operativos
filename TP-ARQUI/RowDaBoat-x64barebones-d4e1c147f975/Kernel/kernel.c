@@ -101,8 +101,8 @@ int main() {
 
 	// halt the cpu until the TT interruption arrives, which will choose the Shell as the running process
 	_hlt();
+	
 	drawString("If this is shown, then something is wrong! \n");
-	// ((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }
 

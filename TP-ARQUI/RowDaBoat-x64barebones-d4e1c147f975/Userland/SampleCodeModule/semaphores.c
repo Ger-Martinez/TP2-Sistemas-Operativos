@@ -3,10 +3,10 @@
 #define MAX_NUMBER_OF_SEMAPHORES 20
 #define MAX_NUMBER_OF_PROCESSES_BLOCKED 20
 
-static uint8_t queue_process_in_lock(uint16_t pid, uint8_t index);
-static void dequeue_process_in_lock(uint8_t index, uint16_t calling_process_PID);
+static uint8_t queue_process_in_lock(uint32_t pid, uint8_t index);
+static void dequeue_process_in_lock(uint8_t index, uint32_t calling_process_PID);
 
-extern uint64_t syscall_block(uint16_t PID, uint16_t PID_of_calling_process);
+extern uint64_t syscall_block(uint32_t PID, uint32_t PID_of_calling_process);
 extern uint8_t enter_region(uint8_t * lock);
 extern char* num_to_string(int num);
 
@@ -14,10 +14,10 @@ typedef struct semaphores {
     uint8_t lock;
     uint8_t value;
     char sem_id;  // needs to be char to store a -1 value
-    uint16_t PID_of_process_blocked_by_sem;  // only 1 process can go through LOCK barrier
+    uint32_t PID_of_process_blocked_by_sem;  // only 1 process can go through LOCK barrier
 
     // 4 variables for dealing with the queue of processes blocked by LOCK
-    uint16_t processes_blocked_by_lock[MAX_NUMBER_OF_PROCESSES_BLOCKED];
+    uint32_t processes_blocked_by_lock[MAX_NUMBER_OF_PROCESSES_BLOCKED];
     uint8_t number_of_processes_blocked_by_lock;  // queue size
     uint8_t where_to_insert_next_process_blocked_by_lock;
     uint8_t index_of_first_process_blocked_by_lock;
@@ -25,7 +25,7 @@ typedef struct semaphores {
 
 static sem semaphores[MAX_NUMBER_OF_SEMAPHORES];
 static uint8_t first_call_to_create_semaphore = 1;
-
+static uint8_t number_of_existing_semaphores = 0;
 
 int create_semaphore(uint8_t sem_value, uint8_t sem_unique_id) {
     if(first_call_to_create_semaphore) {
@@ -60,6 +60,8 @@ int create_semaphore(uint8_t sem_value, uint8_t sem_unique_id) {
     if(!found) 
         return -1;
     
+    number_of_existing_semaphores++;
+    
     semaphores[index_of_new_sem].lock = 0;
     semaphores[index_of_new_sem].value = sem_value;
     semaphores[index_of_new_sem].sem_id = sem_unique_id;
@@ -67,7 +69,7 @@ int create_semaphore(uint8_t sem_value, uint8_t sem_unique_id) {
 }
 
 static void free_all_queues_and_unblock_all_processes(uint8_t index, uint32_t calling_process_PID) {
-    uint16_t pid_to_unblock;
+    uint32_t pid_to_unblock;
     for(uint8_t i=0; i<MAX_NUMBER_OF_PROCESSES_BLOCKED; i++) {
         pid_to_unblock = semaphores[index].processes_blocked_by_lock[i];
         if(pid_to_unblock != 0) {
@@ -94,6 +96,8 @@ uint8_t destroy_semaphore(uint8_t sem_unique_id, uint32_t calling_process_PID) {
             // and sem_post return error instantly
             semaphores[i].sem_id = -1;
 
+            number_of_existing_semaphores--;
+
             // The processes that were left blocked have to be saved, as no process can unblock them now
             // (as no one can make sem_post from now on)
             free_all_queues_and_unblock_all_processes(i, calling_process_PID);
@@ -118,7 +122,7 @@ static uint8_t valid_sem_id(uint8_t id) {
 // returns 1 if sem does not exists
 // returns 2 if no more processes can be blocked for this semaphore
 // returns 0 on success
-uint8_t sem_wait(uint8_t sem_id, uint16_t pid) {
+uint8_t sem_wait(uint8_t sem_id, uint32_t pid) {
     uint8_t index_of_sem = valid_sem_id(sem_id), ret;
     if(index_of_sem == MAX_NUMBER_OF_SEMAPHORES)
         return 1;
@@ -143,7 +147,6 @@ uint8_t sem_wait(uint8_t sem_id, uint16_t pid) {
             se va a bloquear y nadie lo va a salvar 
             */
             semaphores[index_of_sem].PID_of_process_blocked_by_sem = pid;
-            print(STD_OUTPUT, "me estoy bloqueando por SEM\n");
     	    syscall_block(pid, pid);
         }
         if(semaphores[index_of_sem].sem_id != -1) {
@@ -168,8 +171,8 @@ uint8_t sem_wait(uint8_t sem_id, uint16_t pid) {
 }
 
 // sem_post always pierces through the LOCK barrier, as it may need to unblock the only process blocked in SEM
-uint8_t sem_post(uint8_t sem_id, uint16_t calling_process_PID) {
-    uint16_t pid_to_unblock;
+uint8_t sem_post(uint8_t sem_id, uint32_t calling_process_PID) {
+    uint32_t pid_to_unblock;
     uint8_t index_of_sem = valid_sem_id(sem_id);
     if(index_of_sem == MAX_NUMBER_OF_SEMAPHORES)
         return 1;
@@ -187,9 +190,9 @@ uint8_t sem_post(uint8_t sem_id, uint16_t calling_process_PID) {
     return 0;
 }
 
-static void dequeue_process_in_lock(uint8_t index, uint16_t calling_process_PID) {
+static void dequeue_process_in_lock(uint8_t index, uint32_t calling_process_PID) {
     uint8_t aux = semaphores[index].index_of_first_process_blocked_by_lock;
-    uint16_t pid_to_unblock = semaphores[index].processes_blocked_by_lock[aux];
+    uint32_t pid_to_unblock = semaphores[index].processes_blocked_by_lock[aux];
     if(semaphores[index].number_of_processes_blocked_by_lock != 0) {
         semaphores[index].processes_blocked_by_lock[aux] = 0;
         semaphores[index].index_of_first_process_blocked_by_lock = 
@@ -200,7 +203,7 @@ static void dequeue_process_in_lock(uint8_t index, uint16_t calling_process_PID)
 }
 
 // we always insert new blocked-processes to the right of the last process inserted
-static uint8_t queue_process_in_lock(uint16_t pid, uint8_t index) {
+static uint8_t queue_process_in_lock(uint32_t pid, uint8_t index) {
     uint8_t i;
     if(semaphores[index].number_of_processes_blocked_by_lock == MAX_NUMBER_OF_PROCESSES_BLOCKED)
         return 1;
@@ -218,7 +221,11 @@ static uint8_t queue_process_in_lock(uint16_t pid, uint8_t index) {
 
 void list_all_semaphores() {
     uint8_t aux;
-    print(STD_OUTPUT, "SEM_ID    VALUE    LOCK   PROCESS_BLOCKED_IN_SEM  PROCESSES_BLOCKED_IN_LOCK\n");
+    if(number_of_existing_semaphores == 0) {
+        print(STD_OUTPUT, "There are not semaphores yet. Try running test_synchro\n");
+        return;
+    }
+    print(STD_OUTPUT, "SEM_ID    VALUE    LOCK   PID_OF_PROCESS_BLOCKED_IN_SEM  PID_OF_PROCESSES_BLOCKED_IN_LOCK\n");
     for(uint8_t i = 0; i < MAX_NUMBER_OF_SEMAPHORES; i++) {
         if(semaphores[i].sem_id != -1) {
             print(STD_OUTPUT, num_to_string(semaphores[i].sem_id) );
@@ -227,15 +234,25 @@ void list_all_semaphores() {
             print(STD_OUTPUT, "        ");
             print(STD_OUTPUT, num_to_string(semaphores[i].lock) );
             print(STD_OUTPUT, "               ");
-            print(STD_OUTPUT, num_to_string(semaphores[i].PID_of_process_blocked_by_sem) );
-            print(STD_OUTPUT, "                    ");
-            for(uint8_t j = 0; j < semaphores[i].number_of_processes_blocked_by_lock; j++) {
-                aux = semaphores[i].processes_blocked_by_lock[j];
-                if(aux !=  0) {
-                    print(STD_OUTPUT, num_to_string(aux) );
-                    print(STD_OUTPUT, "\n                                                            ");
+            if(semaphores[i].PID_of_process_blocked_by_sem != 0)
+                print(STD_OUTPUT, num_to_string(semaphores[i].PID_of_process_blocked_by_sem) );
+            else
+                print(STD_OUTPUT, "---");
+            print(STD_OUTPUT, "                       ");
+            if(semaphores[i].number_of_processes_blocked_by_lock != 0) {
+                print(STD_OUTPUT, "See next line \n PID of processes blocked by this semaphore in LOCK:  ");
+                for(uint8_t j = 0; j < semaphores[i].number_of_processes_blocked_by_lock; j++) {
+                    aux = semaphores[i].processes_blocked_by_lock[j];
+                    if(aux !=  0) {
+                        print(STD_OUTPUT, num_to_string(aux) );
+                        print(STD_OUTPUT, "  ");
+                    }
                 }
+                print(STD_OUTPUT, "\n\n");
+            } else {
+                print(STD_OUTPUT, "------------\n\n");
             }
+            
         }
     }
 }

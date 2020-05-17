@@ -49,6 +49,7 @@ uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key, uint8
     }
 }
 
+// assumes that a correct pid_key will be given. If not... system likely to crash
 void exit_process(uint8_t pid_key) {
     number_of_free_processes++;
     change_process_state_with_INDEX(pid_key, DEAD);
