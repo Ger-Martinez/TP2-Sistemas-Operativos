@@ -80,11 +80,13 @@ uint64_t negate_state(uint32_t PID_to_block, uint32_t PID_of_calling_process) {
         return 1;
 
     if(PID_to_block == PID_of_calling_process) {
+        //drawString("DIE-");
         while(1){
             if(get_state(PID_to_block) == READY)
                 break;
             _hlt();
         }
-    }
+    } /*else
+        drawString("KILL-");*/
     return 0;
 }

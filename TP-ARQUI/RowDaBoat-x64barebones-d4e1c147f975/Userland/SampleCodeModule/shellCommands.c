@@ -10,7 +10,7 @@
 #include "test_processes.h"
 #include "pipes.h"
 #include "semaphores.h"
-
+#include "phylo.h"
 
 char* descriptions[NUMBER_OF_COMMANDS] = 
 { 
@@ -20,6 +20,7 @@ char* descriptions[NUMBER_OF_COMMANDS] =
     "TEST: test_processes prueba el bloqueo, creacion y destruccion de procesos",
     "TEST: test_priority prueba las prioridades de los procesos",
     "TEST: test_synchro prueba los mecanismos de sincronizacion",
+    "TEST: test_no_synchro muestra las desventajas de no usar semaforos para la sincronizacion",
     "bloquea otro proceso dado su PID",
     "lista todos los procesos existentes",
     "imprime un saludo cada algunos segundos",
@@ -30,6 +31,7 @@ char* descriptions[NUMBER_OF_COMMANDS] =
     "ejecuta un proceso en FG para generar output a un PIPE",
     "filtra las vocales del input",
     "lista todos los pipes existentes",
+    "inicia un programa en FG que se encarga de manejar a los PHYLOS",
     "Imprime en pantalla el valor actual de todos los registros", 
     "Muestra todos los distintos programas disponibles", 
     "Verifica el funcionamiento de la rutina de excepcion de la division por cero", 
@@ -98,56 +100,60 @@ void execute_command(int commands_to_execute[2], uint8_t number_of_commands_to_e
                 testing_priority(background, pid_key);
                 break;
             case 5:
-                ret = test_sync(background, pid_key);     // defined in test_synchro.c
-                if(ret != 1)
-                    test_no_sync(background, pid_key);  // defined in test_synchro.c
+                test_sync(background, pid_key);
                 break;
             case 6:
-                block(parameter, pid_key);
+                test_no_sync(background, pid_key);
                 break;
             case 7:
-                ps();
+                block(parameter, pid_key);
                 break;
             case 8:
-                loop(background, pid_key);
+                ps();
                 break;
             case 9:
-                nice();
+                loop(background, pid_key);
                 break;
             case 10:
-                list_all_semaphores();
+                nice();
                 break;
             case 11:
-                cat(pid_key, where_to_read);
+                list_all_semaphores();
                 break;
             case 12:
-                wc(pid_key, where_to_read);
+                cat(pid_key, where_to_read);
                 break;
             case 13:
-                fg(pid_key, where_to_write);
+                wc(pid_key, where_to_read);
                 break;
             case 14:
-                filter(pid_key, where_to_read);
+                fg(pid_key, where_to_write);
                 break;
             case 15:
-                list_all_pipes();
+                filter(pid_key, where_to_read);
                 break;
             case 16:
-                inforeg();
+                list_all_pipes();
                 break;
             case 17:
-                help();
+                start_phylo(pid_key);
                 break;
             case 18:
-                exception0();
+                inforeg();
                 break;
             case 19:
-                exception6();
+                help();
                 break;
             case 20:
-                printmem(parameter);
+                exception0();
                 break;
             case 21:
+                exception6();
+                break;
+            case 22:
+                printmem(parameter);
+                break;
+            case 23:
                 showTime();
                 break;
         }
@@ -162,7 +168,7 @@ static void inforeg(){
 
 static void help() {
     for(int i = 0; i < NUMBER_OF_COMMANDS; i++) {
-        if(i == 16) {
+        if(i == 18) {
             print(STD_OUTPUT, "------------------\n  ARQUI LEGACY COMMANDS\n");
         }
         print(STD_OUTPUT, all_commands[i]);

@@ -7,15 +7,25 @@ extern uint64_t syscall_exit(uint8_t pid_key);
 extern uint32_t syscall_getpid(int pid_key);
 extern char* num_to_string(int num);
 
-#define N 10000000
+//#define N 10000000  // 10.000.000
+  #define N 1000000
+//#define N 3
 #define SEM_ID 1
-#define TOTAL_PAIR_PROCESSES 2 /*******************************************/
+#define TOTAL_PAIR_PROCESSES 2
+#define NO_SEM 1
+#define WITH_SEM 0
 
-uint64_t global_used_by_synchro;  //shared memory
-uint64_t global_used_by_no_synchro;  //shared memory
+long int global;  //shared memory
+uint8_t process_left_to_finish;  // only the last process can destroy the semaphore
 
-void slowInc(uint64_t *p, uint64_t inc){
-  uint64_t aux = *p;
+void slowInc(long int *p, int inc, uint8_t state){
+  long int aux = *p;
+  if(state == NO_SEM) {
+    for(uint64_t i=0; i<100; i++){ /* busy waiting */ }
+  }
+  //if(state == WITH_SEM) {
+  //  for(uint64_t i=0; i<100000000; i++){ /* busy waiting */ }
+  //}
   aux += inc;
   *p = aux;
 }
@@ -33,26 +43,43 @@ void my_process_inc(uint8_t pid_key){
   if (ret == -1){
     print(STD_ERR, "ERROR OPENING SEM, in function my_process_inc\n");
     syscall_exit(pid_key);
-  } else if(ret == 1)
+  }else if(ret == 1) {
     print(STD_OUTPUT, "my_process_inc tried to connect to an already-created SEM. It doesn't matter\n");
+  }
   
   for (i = 0; i < N; i++){
-    sem_wait(SEM_ID, this_process_pid);
-    slowInc(&global_used_by_synchro, 1);
-    sem_post(SEM_ID, this_process_pid);
+    if(i < 0 || i > N){
+      print(STD_OUTPUT, "a");
+    }
+    //print(STD_OUTPUT, "INC--");
+    ret = sem_wait(SEM_ID, this_process_pid);
+    if(ret == 2 || ret == 1) {
+      print(STD_ERR, "ERROR in sem_wait, in my_process_inc\n");
+      syscall_exit(pid_key);
+    }
+    slowInc(&global, 1, WITH_SEM);
+    //print(STD_OUTPUT, "INC++");
+    ret = sem_post(SEM_ID, this_process_pid);
+    if(ret == 1) {
+      print(STD_ERR, "ERROR in sem_post, in my_process_inc\n");
+      syscall_exit(pid_key);
+    }
   }
-
-  destroy_semaphore(SEM_ID, this_process_pid);
   
-  print(STD_OUTPUT, "Final value of global_used_by_synchro in my_process_inc: ");
-  print(STD_OUTPUT, num_to_string(global_used_by_synchro));
+  print(STD_OUTPUT, "Final value of global in my_process_inc: ");
+  print(STD_OUTPUT, num_to_string(global));
   print(STD_OUTPUT, "\n");
 
-  if(global_used_by_synchro == 0)
+  print(STD_OUTPUT, "Final value of i in my_process_inc: ");
+  print(STD_OUTPUT, num_to_string(i));
+  print(STD_OUTPUT, "\n");
+
+  if(process_left_to_finish == 1)
     destroy_semaphore(SEM_ID, this_process_pid);
   else
-    print(STD_OUTPUT, "my_process_inc cannot destroy this SEM as this process isn't the last one to execute");
+    print(STD_OUTPUT, "my_process_inc cannot destroy this SEM as this process isn't the last one to execute\n");
 
+  process_left_to_finish--;
   syscall_exit(pid_key);
 }
 
@@ -69,32 +96,48 @@ void my_process_dec(uint8_t pid_key){
   if (ret == -1){
     print(STD_ERR, "ERROR OPENING SEM, in function my_process_inc\n");
     syscall_exit(pid_key);
-  } else if(ret == 1)
+  }else if(ret == 1){
     print(STD_OUTPUT, "my_process_dec tried to connect to an already-created SEM. It doesn't matter\n");
+  }
   
   for (i = 0; i < N; i++){
-    sem_wait(SEM_ID, this_process_pid);
-    slowInc(&global_used_by_synchro, -1);
-    sem_post(SEM_ID, this_process_pid);
+    //print(STD_OUTPUT, "DEC--");
+    ret = sem_wait(SEM_ID, this_process_pid);
+    if(ret == 2 || ret == 1) {
+      print(STD_ERR, "ERROR in sem_wait, in my_process_dec\n");
+      syscall_exit(pid_key);
+    }
+    slowInc(&global, -1, WITH_SEM);
+    //print(STD_OUTPUT, "DEC++");
+    ret = sem_post(SEM_ID, this_process_pid);
+    if(ret == 1) {
+      print(STD_ERR, "ERROR in sem_post, in my_process_dec\n");
+      syscall_exit(pid_key);
+    }
   }
 
-  print(STD_OUTPUT, "Final value of global_used_by_synchro in my_process_dec: ");
-  print(STD_OUTPUT, num_to_string(global_used_by_synchro));
+  print(STD_OUTPUT, "Final value of global in my_process_dec: ");
+  print(STD_OUTPUT, num_to_string(global));
   print(STD_OUTPUT, "\n");
 
-  if(global_used_by_synchro == 0)
+  print(STD_OUTPUT, "Final value of i in my_process_dec: ");
+  print(STD_OUTPUT, num_to_string(i));
+  print(STD_OUTPUT, "\n");
+
+  if(process_left_to_finish == 1)
     destroy_semaphore(SEM_ID, this_process_pid);
   else
     print(STD_OUTPUT, "my_process_dec cannot destroy this SEM as this process isn't the last one to execute\n");
 
+  process_left_to_finish--;
   syscall_exit(pid_key);
 }
 
 uint8_t test_sync(uint8_t background, uint8_t pid_key){
   uint64_t i;
   int ret;
-
-  global_used_by_synchro = 0;
+  global = 0;
+  process_left_to_finish = TOTAL_PAIR_PROCESSES * 2;
 
   print(STD_OUTPUT, "CREATING PROCESSES...\n");
 
@@ -126,11 +169,11 @@ uint8_t test_sync(uint8_t background, uint8_t pid_key){
 void my_process_inc_no_sem(uint8_t pid_key){
   uint64_t i;
   for (i = 0; i < N; i++){
-    slowInc(&global_used_by_no_synchro, 1);
+    slowInc(&global, 1, NO_SEM);
   }
 
-  print(STD_OUTPUT, "Final value of global_used_by_no_synchro in my_process_inc_no_sem: ");
-  print(STD_OUTPUT, num_to_string(global_used_by_no_synchro));
+  print(STD_OUTPUT, "Final value of global in my_process_inc_no_sem: ");
+  print(STD_OUTPUT, num_to_string(global));
   print(STD_OUTPUT, "\n");
 
   syscall_exit(pid_key);
@@ -139,11 +182,11 @@ void my_process_inc_no_sem(uint8_t pid_key){
 void my_process_dec_no_sem(uint8_t pid_key){
   uint64_t i;
   for (i = 0; i < N; i++){
-    slowInc(&global_used_by_no_synchro, -1);
+    slowInc(&global, -1, NO_SEM);
   }
 
-  print(STD_OUTPUT, "Final value of global_used_by_no_synchro in my_process_dec_no_sem: ");
-  print(STD_OUTPUT, num_to_string(global_used_by_no_synchro));
+  print(STD_OUTPUT, "Final value of global in my_process_dec_no_sem: ");
+  print(STD_OUTPUT, num_to_string(global));
   print(STD_OUTPUT, "\n");
 
   syscall_exit(pid_key);
@@ -152,7 +195,7 @@ void my_process_dec_no_sem(uint8_t pid_key){
 uint8_t test_no_sync(uint8_t background, uint8_t pid_key){
   uint64_t i;
   int ret;
-  global_used_by_no_synchro = 0;
+  global = 0;
 
   print(STD_OUTPUT, "CREATING PROCESSES...\n");
 

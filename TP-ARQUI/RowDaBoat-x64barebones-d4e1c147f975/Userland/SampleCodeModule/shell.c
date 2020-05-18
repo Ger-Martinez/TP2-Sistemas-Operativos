@@ -52,8 +52,7 @@ static void shell_main(uint8_t pid_key) {
                     putchar(STD_OUTPUT, c);
                 }
             }
-        } else
-            print(STD_ERR, "Now that the shell blocks when it cannot READ, this text should never be seen\n");
+        }
     }
 }
 
