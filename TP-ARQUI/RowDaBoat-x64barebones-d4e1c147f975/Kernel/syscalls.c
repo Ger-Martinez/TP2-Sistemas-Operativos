@@ -16,18 +16,18 @@ extern int segundos();
 extern int minutos();
 extern int horas();
 extern void _hlt(void);
-static uint64_t write_syscall(int file_descriptor, char* string);
-static uint64_t read_syscall(int where_to_read, char* where_to_store);
+static uint64_t write_syscall(uint8_t file_descriptor, char* string);
+static uint64_t read_syscall(uint8_t where_to_read, char* where_to_store);
 
 
-uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter, int fourth_parameter, uint8_t fifth_parameter) {
+uint64_t syscall_dispatcher(int ID, uint64_t second_parameter, char* third_parameter, int fourth_parameter, uint8_t fifth_parameter) {
     switch(ID){
         case 4:
             return write_syscall(second_parameter, third_parameter);
         case 3:
             return read_syscall(second_parameter, third_parameter);
         case 2:
-            return create_process((uint64_t)second_parameter, (uint8_t)third_parameter, (uint8_t)fourth_parameter, fifth_parameter);
+            return create_process((uint64_t)second_parameter, (uint64_t)third_parameter, (uint8_t)fourth_parameter, fifth_parameter);
         case 45:
             return ( (uint64_t) malloc((uint64_t)second_parameter) );
         case 5:
@@ -43,11 +43,11 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter,
             return 0;  // the CPU will never get to this return
         }
         case 7:
-            return negate_state(second_parameter, (uint16_t)third_parameter);
+            return negate_state(second_parameter, (uint64_t)third_parameter);
         case 8:
             return ps();
         case 9:
-            return change_priority(second_parameter, (uint8_t)third_parameter);
+            return change_priority(second_parameter, (uint64_t)third_parameter);
         default:{
             // we just add this to keep warnings quiet
             return 0;
@@ -55,7 +55,7 @@ uint64_t syscall_dispatcher(int ID, int second_parameter, char* third_parameter,
     }
 }
 
-static uint64_t write_syscall(int file_descriptor, char* string) {
+static uint64_t write_syscall(uint8_t file_descriptor, char* string) {
     switch(file_descriptor){
         case STD_OUTPUT:{
             drawString(string);
@@ -68,7 +68,7 @@ static uint64_t write_syscall(int file_descriptor, char* string) {
     }
 }
 
-static uint64_t read_syscall(int where_to_read, char* where_to_store) {
+static uint64_t read_syscall(uint8_t where_to_read, char* where_to_store) {
     switch(where_to_read){
         case STD_INPUT:{  // read from the keyboard buffer
             if(get_keyboard_buffer() == -1) {

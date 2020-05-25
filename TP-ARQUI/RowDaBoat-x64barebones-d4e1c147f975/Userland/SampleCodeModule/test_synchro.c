@@ -7,9 +7,8 @@ extern uint64_t syscall_exit(uint8_t pid_key);
 extern uint32_t syscall_getpid(int pid_key);
 extern char* num_to_string(int num);
 
-//#define N 10000000  // 10.000.000
-  #define N 1000000
-//#define N 3
+#define N 10000000    // 10.000.000
+//#define N 1000000   // 1 millon
 #define SEM_ID 1
 #define TOTAL_PAIR_PROCESSES 2
 #define NO_SEM 1
@@ -23,9 +22,6 @@ void slowInc(long int *p, int inc, uint8_t state){
   if(state == NO_SEM) {
     for(uint64_t i=0; i<100; i++){ /* busy waiting */ }
   }
-  //if(state == WITH_SEM) {
-  //  for(uint64_t i=0; i<100000000; i++){ /* busy waiting */ }
-  //}
   aux += inc;
   *p = aux;
 }
@@ -48,17 +44,12 @@ void my_process_inc(uint8_t pid_key){
   }
   
   for (i = 0; i < N; i++){
-    if(i < 0 || i > N){
-      print(STD_OUTPUT, "a");
-    }
-    //print(STD_OUTPUT, "INC--");
     ret = sem_wait(SEM_ID, this_process_pid);
     if(ret == 2 || ret == 1) {
       print(STD_ERR, "ERROR in sem_wait, in my_process_inc\n");
       syscall_exit(pid_key);
     }
     slowInc(&global, 1, WITH_SEM);
-    //print(STD_OUTPUT, "INC++");
     ret = sem_post(SEM_ID, this_process_pid);
     if(ret == 1) {
       print(STD_ERR, "ERROR in sem_post, in my_process_inc\n");
@@ -68,10 +59,6 @@ void my_process_inc(uint8_t pid_key){
   
   print(STD_OUTPUT, "Final value of global in my_process_inc: ");
   print(STD_OUTPUT, num_to_string(global));
-  print(STD_OUTPUT, "\n");
-
-  print(STD_OUTPUT, "Final value of i in my_process_inc: ");
-  print(STD_OUTPUT, num_to_string(i));
   print(STD_OUTPUT, "\n");
 
   if(process_left_to_finish == 1)
@@ -101,14 +88,12 @@ void my_process_dec(uint8_t pid_key){
   }
   
   for (i = 0; i < N; i++){
-    //print(STD_OUTPUT, "DEC--");
     ret = sem_wait(SEM_ID, this_process_pid);
     if(ret == 2 || ret == 1) {
       print(STD_ERR, "ERROR in sem_wait, in my_process_dec\n");
       syscall_exit(pid_key);
     }
     slowInc(&global, -1, WITH_SEM);
-    //print(STD_OUTPUT, "DEC++");
     ret = sem_post(SEM_ID, this_process_pid);
     if(ret == 1) {
       print(STD_ERR, "ERROR in sem_post, in my_process_dec\n");
@@ -118,10 +103,6 @@ void my_process_dec(uint8_t pid_key){
 
   print(STD_OUTPUT, "Final value of global in my_process_dec: ");
   print(STD_OUTPUT, num_to_string(global));
-  print(STD_OUTPUT, "\n");
-
-  print(STD_OUTPUT, "Final value of i in my_process_dec: ");
-  print(STD_OUTPUT, num_to_string(i));
   print(STD_OUTPUT, "\n");
 
   if(process_left_to_finish == 1)

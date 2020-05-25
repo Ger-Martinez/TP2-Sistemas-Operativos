@@ -1,9 +1,7 @@
 #include <stdint.h>
 #include <screen_driver.h>
 
-
 /***********  STILL UNDER DEVELOPMENT  **************/
-
 
 #define MIN_BLOCK_SIZE 4096  // 4KB
 #define TOTAL_HEAP_SIZE (128 * 1024 * 1024)  // 128 MB
@@ -20,7 +18,6 @@
 #define LEFT ('l') 
 #define RIGHT ('r') 
 
-
 uint8_t initialized = 0;
 
 typedef struct buddyHeader {
@@ -34,7 +31,6 @@ buddyHeader * firstHeader = START_OF_HEAP;
 buddyHeader * currentHeader;
 buddyHeader * nextHeader;
  
-
 void initialize() {
     buddyHeader * bh = (void *) START_OF_HEAP;
     bh->size = TOTAL_HEAP_SIZE - sizeof(buddyHeader);
@@ -54,7 +50,6 @@ void * buddy_MALLOC (uint64_t bytesRequested) {
 
     currentHeader = firstHeader;
     nextHeader = currentHeader + sizeof(currentHeader) + currentHeader->size;
-    // drawNumber(nextHeader, 0xFFFFFF, 0x000000);
     buddyHeader * bestFit = NULL;
     uint64_t aux;
     uint8_t found = 0;
@@ -70,16 +65,16 @@ void * buddy_MALLOC (uint64_t bytesRequested) {
         nextHeader += aux;
     }
 
-    
     if(found == 0)
         return NULL;
 
     uint64_t newSize;
 
-    while(bestFit->size / 2 - sizeof(buddyHeader) >= bytesRequested && (bestFit->size + sizeof(buddyHeader)) >= MIN_BLOCK_SIZE) {
+    bestFit->status = OCCUPED;
+
+    while( ( (bestFit->size + sizeof(buddyHeader)) / 2 ) - sizeof(buddyHeader) >= bytesRequested && (bestFit->size + sizeof(buddyHeader)) / 2 >= MIN_BLOCK_SIZE ) {
         newSize = (bestFit->size + sizeof(buddyHeader)) / 2 - sizeof(buddyHeader);
         bestFit->size = newSize;
-        bestFit->status = OCCUPED;
 
         buddyHeader * newHeader = bestFit + newSize + sizeof(buddyHeader); 
         newHeader->status = FREE;

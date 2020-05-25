@@ -22,8 +22,6 @@ static const uint16_t struct_size = sizeof(freeBlockNode);
 static freeBlockNode freeListStart, *freeListEnd = NULL;
 
 void* free_list_MALLOC(uint64_t wantedSize) {
-	if(wantedSize <= 0)
-		return NULL;
 	
     freeBlockNode *returnedBlock, *previousBlock, *newFreeBlock; // only used if the block returned can be split into two
     void* returnAddress = NULL;

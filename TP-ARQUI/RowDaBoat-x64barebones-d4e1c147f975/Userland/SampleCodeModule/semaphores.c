@@ -98,8 +98,6 @@ uint8_t destroy_semaphore(uint8_t sem_unique_id, uint32_t calling_process_PID) {
 
             number_of_existing_semaphores--;
 
-            //print(STD_OUTPUT, num_to_string(calling_process_PID)); print(STD_OUTPUT, " have just destroyed semaphore----");
-
             // The processes that were left blocked have to be saved, as no process can unblock them now
             // (as no one can make sem_post from now on)
             free_all_queues_and_unblock_all_processes(i, calling_process_PID);
@@ -138,15 +136,12 @@ uint8_t sem_wait(uint8_t sem_id, uint32_t pid) {
         ret = queue_process_in_lock(pid, index_of_sem);
         if(ret == 1)  // no more space in queue --> return error
             return 2;
-        //print(STD_OUTPUT, num_to_string(pid)); print(STD_OUTPUT, " will block itself in LOCK----------");
         ret = syscall_block(pid, pid);
         if(ret == 1) {
             print(STD_ERR, num_to_string(pid)); print(STD_ERR, " no logro auto-bloquearse por LOCK\n");
             return 1;
         }
-    } /*else {
-        print(STD_OUTPUT, num_to_string(pid)); print(STD_OUTPUT, " acaba de cerrar el camino de LOCK-------");
-    }*/
+    }
     
     if(semaphores[index_of_sem].sem_id != -1) {
         if(semaphores[index_of_sem].value == 0){
@@ -156,7 +151,6 @@ uint8_t sem_wait(uint8_t sem_id, uint32_t pid) {
             se va a bloquear y nadie lo va a salvar 
             */
             semaphores[index_of_sem].PID_of_process_blocked_by_sem = pid;
-            //print(STD_OUTPUT, num_to_string(pid)); print(STD_OUTPUT, " will block itself in SEM---------");
     	    ret = syscall_block(pid, pid);
             if(ret == 1) {
                 print(STD_ERR, num_to_string(pid)); print(STD_ERR, " no logro auto-bloquearse por LOCK\n");
@@ -164,13 +158,7 @@ uint8_t sem_wait(uint8_t sem_id, uint32_t pid) {
             }
         }
         if(semaphores[index_of_sem].sem_id != -1) {
-            semaphores[index_of_sem].value --;
-
-
-            //print(STD_OUTPUT, num_to_string(pid)); print(STD_OUTPUT, " bajo el SEM de "); print(STD_OUTPUT, num_to_string(semaphores[index_of_sem].value + 1));
-            //print(STD_OUTPUT, " a "); print(STD_OUTPUT, num_to_string(semaphores[index_of_sem].value)); print(STD_OUTPUT, "------------");
-            
-            
+            semaphores[index_of_sem].value --;            
             if(semaphores[index_of_sem].number_of_processes_blocked_by_lock != 0){
                 ret = dequeue_process_in_lock(index_of_sem, pid);
                 if(ret == 1) {
@@ -178,10 +166,7 @@ uint8_t sem_wait(uint8_t sem_id, uint32_t pid) {
                 }
             }else{
                 /* POSIBLE ERROR: si justo aca corre otro proceso que intenta entrar a LOCK, se va bloquear porque 
-                todavia lock=1. Entonces este proceso nunca se dio cuenta que tenia que salvar al otro proceso ! */
-                
-                //print(STD_OUTPUT, num_to_string(pid)); print(STD_OUTPUT, " esta a un milimetro de abrir el camino de LOCK-------");
-                
+                todavia lock=1. Entonces este proceso nunca se dio cuenta que tenia que salvar al otro proceso ! */                
                 semaphores[index_of_sem].lock = 0;
             }
             return 0;
@@ -204,20 +189,11 @@ uint8_t sem_post(uint8_t sem_id, uint32_t calling_process_PID) {
 
     semaphores[index_of_sem].value ++;
 
-    //print(STD_OUTPUT, num_to_string(calling_process_PID)); print(STD_OUTPUT, " subio el SEM de "); print(STD_OUTPUT, num_to_string(semaphores[index_of_sem].value-1));
-    //print(STD_OUTPUT, " a "); print(STD_OUTPUT, num_to_string(semaphores[index_of_sem].value)); print(STD_OUTPUT, "------------");
-
     if(semaphores[index_of_sem].value == 1) {
         // it was incremented from 0 to 1 --> must unblock a process
         pid_to_unblock = semaphores[index_of_sem].PID_of_process_blocked_by_sem;
         if(pid_to_unblock != 0) {
             semaphores[index_of_sem].PID_of_process_blocked_by_sem = 0;
-
-
-            //print(STD_OUTPUT, num_to_string(calling_process_PID)); print(STD_OUTPUT, " esta a un milimetro de desbloqeuar a ");
-            //print(STD_OUTPUT, num_to_string(pid_to_unblock)); print(STD_OUTPUT, "------");
-
-
             ret = syscall_block(pid_to_unblock, calling_process_PID);
             if(ret == 1) {
                 print(STD_ERR, num_to_string(calling_process_PID));
@@ -246,9 +222,6 @@ static uint8_t dequeue_process_in_lock(uint8_t index, uint32_t calling_process_P
     semaphores[index].where_to_dequeue ++ ;
     if(semaphores[index].where_to_dequeue == MAX_NUMBER_OF_PROCESSES_BLOCKED)
         semaphores[index].where_to_dequeue = 0;
-
-    //print(STD_OUTPUT, num_to_string(calling_process_PID)); print(STD_OUTPUT, " will unblock ");
-    //print(STD_OUTPUT, num_to_string(pid_to_unblock)); print(STD_OUTPUT, " which is blocked in LOCK-----");
 
     ret = syscall_block(pid_to_unblock, calling_process_PID);
     if(ret == 1) {

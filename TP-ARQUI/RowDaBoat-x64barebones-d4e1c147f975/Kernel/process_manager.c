@@ -26,7 +26,7 @@ uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key, uint8
         }
 
         // the end of the allocked memory is the start of the stack
-        void* process_stack_start = process_stack_end + FIXED_STACK_SIZE;
+        void* process_stack_start = (uint64_t*)((uint64_t)process_stack_end + FIXED_STACK_SIZE);
 
         // gets the index in wich this process will have its PCB in the PCB's array
         /* this pid_key will be given to the new process via RDI, so it will start its execution with one parameter.

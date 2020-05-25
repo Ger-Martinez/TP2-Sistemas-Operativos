@@ -3,7 +3,7 @@
 
 void* malloc(uint64_t wantedSize) {
 
-    // THIS INTERFACE RETURNS THE FREE-LIST MALLOC  (FOR NOW)
+    // THIS INTERFACE RETURNS THE FREE-LIST MALLOC
     
     return free_list_MALLOC(wantedSize);
     //return buddy_MALLOC(wantedSize);
@@ -11,14 +11,14 @@ void* malloc(uint64_t wantedSize) {
 
 uint8_t free(void* address) {
 
-    // THIS INTERFACE RETURNS THE FREE-LIST FREE  (FOR NOW)
+    // THIS INTERFACE RETURNS THE FREE-LIST FREE
 
     return free_list_FREE(address);
 }
 
 uint64_t mem_state() {
 
-    // THIS INTERFACE RETURNS THE FREE-LIST MEM_STATE  (FOR NOW)
+    // THIS INTERFACE RETURNS THE FREE-LIST MEM_STATE
     return free_list_MEM_STATE();
     //return buddy_MEM_STATE();
 }

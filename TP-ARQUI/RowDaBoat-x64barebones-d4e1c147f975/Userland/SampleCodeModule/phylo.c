@@ -187,8 +187,16 @@ void phylo_even_code(uint8_t pid_key) {
         if(array[i].pid_to_connect == this_process_PID)
             break;
     
-    uint8_t left_sem = array[i].left_sem;
-    uint8_t right_sem = array[i].right_sem;
+    uint8_t left_sem;
+    uint8_t right_sem;
+    if(i != MAX_NUMBER_OF_PHYLOS) {
+        left_sem = array[i].left_sem;
+        right_sem = array[i].right_sem;
+    } else {
+        print(STD_ERR, "Impossible!\n");
+        syscall_exit(pid_key);
+    }
+    
 
     ret = sem_wait(right_sem, this_process_PID);
     if(ret == 1 || ret == 2) {
@@ -238,8 +246,15 @@ void phylo_odd_code(uint8_t pid_key) {
         if(array[i].pid_to_connect == this_process_PID)
             break;
     
-    uint8_t left_sem = array[i].left_sem;
-    uint8_t right_sem = array[i].right_sem;
+    uint8_t left_sem;
+    uint8_t right_sem;
+    if(i != MAX_NUMBER_OF_PHYLOS) {
+        left_sem = array[i].left_sem;
+        right_sem = array[i].right_sem;
+    } else {
+        print(STD_ERR, "Impossible!\n");
+        syscall_exit(pid_key);
+    }
 
     ret = sem_wait(left_sem, this_process_PID);
     if(ret == 1 || ret == 2) {

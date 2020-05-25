@@ -4,7 +4,7 @@
 #include <screen_driver.h>
 #include "process_manager.h"
 #define NULL ((void*)0)
-#define INIT_STACK_SIZE 256
+#define INIT_STACK_SIZE 4096
 #define MINIMUM_PRIORITY 1
 
 uint64_t choose_next_process();
@@ -175,7 +175,7 @@ static uint8_t configure_init_process(){
     }
 
     // the end of the allocked memory is the start of the stack
-    void* init_stack_start = init_stack_end + INIT_STACK_SIZE;
+    void* init_stack_start = (uint64_t*)((uint64_t)init_stack_end + INIT_STACK_SIZE);
 
     // we create a pointer to the function that init always runs
     void (*init_code)(void);

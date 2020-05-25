@@ -92,7 +92,7 @@ static void filter_code(uint8_t pid_key, uint8_t where_to_read) {
     char buffer[128 * 3] = {'\0'};
     char buffer_no_vocals[128 * 3] = {'\0'};
     uint8_t ret;
-    uint16_t i, j;
+
     ret = read(where_to_read, &(buffer[0]));
     if(ret == 1) {
         print(STD_ERR, "hubo error en el read\n");
@@ -100,6 +100,7 @@ static void filter_code(uint8_t pid_key, uint8_t where_to_read) {
     }
     print(STD_OUTPUT, "\n FILTER returns:\n");
 
+    uint16_t i, j = 0;
     for(i = 0; buffer[i] != '\0'; i++) {
         if(isNotVocal(buffer[i])) {
             buffer_no_vocals[j++] = buffer[i];
