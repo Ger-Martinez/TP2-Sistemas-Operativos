@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <keyboard.h>
 #include <stdint.h>
 #include "process_manager.h"
@@ -41,6 +43,10 @@ void keyboard_handler(void){
     // if a letter was read, then we must UNBLOCK the FG process that made the READ-syscall
     change_process_state_with_INDEX(get_foreground_process(), READY);
     buffer = letra;  // añado la letra al buffer
+}
+
+uint8_t buffer_is_empty() {
+    return buffer == -1;
 }
 
 char get_keyboard_buffer(void) {
@@ -108,7 +114,7 @@ static char get_letter_code(void){
 
         //Si no es ninguna tecla especial, entonces debe ser una letra/numero/signo
         default:
-            if (code > 0  &&  code < len  &&  map[code]!='\0'){
+            if (code < len  &&  map[code]!='\0'){
                 if(shift_pressed == 0){
                     if(caps_lock == 0){
                         //Busco en la tabla en minuscula:

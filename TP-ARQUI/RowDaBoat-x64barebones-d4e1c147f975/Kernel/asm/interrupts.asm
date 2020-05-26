@@ -154,6 +154,7 @@ _systemCallsHandler:
 	mov rax, rdx
 	mov rdx, rcx  ; 3rd parameter
 	mov rcx, rax  ; 4th parameter
+	mov r8, r8    ; 5th parameter
 	call syscall_dispatcher
 	mov rax, rax  ; syscalls have a return value
 	popStateNoRAX

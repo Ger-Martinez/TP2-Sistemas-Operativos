@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>
 #include <lib.h>   // ya que necesita la funcion cpuvendor
 #include <naiveConsole.h>
@@ -90,7 +92,7 @@ void * initializeKernelBinary() {
 
 int main() {
 	// create the first process which is the SHELL
-	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0);
+	uint8_t first_process = create_process((uint64_t)sampleCodeModuleAddress, 1, 0 , 0);
 	if(first_process == 1) {
 		drawString("SHELL WAS NOT CREATED --> ABORT");
 		haltcpu();
@@ -101,8 +103,8 @@ int main() {
 
 	// halt the cpu until the TT interruption arrives, which will choose the Shell as the running process
 	_hlt();
+	
 	drawString("If this is shown, then something is wrong! \n");
-	// ((EntryPoint)sampleCodeModuleAddress)();
 	return 0;
 }
 

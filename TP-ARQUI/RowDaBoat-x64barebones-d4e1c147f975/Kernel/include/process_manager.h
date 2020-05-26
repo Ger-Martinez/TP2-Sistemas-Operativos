@@ -7,12 +7,11 @@
 #define READY 4
 #define BLOCKED 5
 #define BLOCKED_READING 6
-// #define RUNNING 3  /* no se si hace falta... despues vemos si lo sacamos */
 #define MAX_NUMBER_OF_PROCESSES 30  /* esto se puede ir cambiando */
 
-uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key);
+uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key, uint8_t input_output_ID);
 void exit_process(uint8_t pid_key);
-uint64_t kill_process(uint16_t PID);
-uint64_t negate_state(uint16_t PID);
+uint64_t kill_process(uint32_t PID);
+uint64_t negate_state(uint32_t PID_to_block, uint32_t PID_of_calling_process);
 
 #endif

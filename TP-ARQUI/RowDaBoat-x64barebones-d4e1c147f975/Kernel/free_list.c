@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>
 #include <screen_driver.h>
 #include "lib.h"  // for NULL constant
@@ -22,8 +24,6 @@ static const uint16_t struct_size = sizeof(freeBlockNode);
 static freeBlockNode freeListStart, *freeListEnd = NULL;
 
 void* free_list_MALLOC(uint64_t wantedSize) {
-	if(wantedSize <= 0)
-		return NULL;
 	
     freeBlockNode *returnedBlock, *previousBlock, *newFreeBlock; // only used if the block returned can be split into two
     void* returnAddress = NULL;

@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "MemoryManager.h"
 #include "scheduler.h"
 #include <screen_driver.h>
@@ -7,13 +9,13 @@
 #define PROCESS_EXISTS 1
 #define PROCESS_NOT_EXISTS 0
 
-extern uint64_t configure_stack(uint64_t, uint64_t, uint8_t);
+extern uint64_t configure_stack(uint64_t, uint64_t, uint8_t, uint8_t);
 extern void _hlt();
 
 // quick way of returning error if no more processes can be created
 static uint8_t number_of_free_processes = MAX_NUMBER_OF_PROCESSES;
 
-uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
+uint32_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key, uint8_t input_output_ID) {
     if(number_of_free_processes == 0) {
         return 1;
     }
@@ -26,7 +28,7 @@ uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
         }
 
         // the end of the allocked memory is the start of the stack
-        void* process_stack_start = process_stack_end + FIXED_STACK_SIZE;
+        void* process_stack_start = (uint64_t*)((uint64_t)process_stack_end + FIXED_STACK_SIZE);
 
         // gets the index in wich this process will have its PCB in the PCB's array
         /* this pid_key will be given to the new process via RDI, so it will start its execution with one parameter.
@@ -36,43 +38,57 @@ uint8_t create_process(uint64_t RIP, uint8_t background, uint8_t pid_key) {
 
         // push everything in the new stack, preparing the new process for the TT's "pushState" and "iretq"
         uint64_t new_stack_address;
-        new_stack_address = configure_stack( (uint64_t)process_stack_start , RIP , new_pid_key);
-    
+        new_stack_address = configure_stack( (uint64_t)process_stack_start , RIP , new_pid_key, input_output_ID);
+
         number_of_free_processes--;
-        uint8_t ret = create_PCB_and_insert_it_on_scheduler_queue(new_stack_address, background, pid_key);
+        uint32_t ret = create_PCB_and_insert_it_on_scheduler_queue(new_stack_address, background, pid_key, (uint64_t)process_stack_end);
         if(ret == 1) {
             drawString("ERROR in create_process: could not create PCB\n");
             free(process_stack_end);
             return 1;
         }
-
-        /* if create_process was called with parameter background==0, then the new process was meant to be created in FG.
-            So, we are returning here once the new FG process finishes. So, me must free its stack. */
-        if(background == 0){
-            free(process_stack_end);
-        }
-        return 0;
+        return ret;
     }
 }
 
+// assumes that a correct pid_key will be given. If not... system likely to crash
 void exit_process(uint8_t pid_key) {
     number_of_free_processes++;
     change_process_state_with_INDEX(pid_key, DEAD);
-    _hlt();
+    while(1){
+        _hlt();
+    }
 }
 
-uint64_t kill_process(uint16_t PID) {
+uint64_t kill_process(uint32_t PID) {
     number_of_free_processes++;
     return change_process_state_with_PID(PID, DEAD);
 }
 
-uint64_t negate_state(uint16_t PID) {
-    if(get_state(PID) == 1)
+uint64_t negate_state(uint32_t PID_to_block, uint32_t PID_of_calling_process) {
+    uint8_t state = get_state(PID_to_block);
+    uint8_t ret;
+    if(state == 1)
         return 1;
 
-    if(get_state(PID) == READY)
-        change_process_state_with_PID(PID, BLOCKED);
-    else if(get_state(PID) == BLOCKED)
-        change_process_state_with_PID(PID, READY);
+    if(state == READY)
+        ret = change_process_state_with_PID(PID_to_block, BLOCKED);
+    else if(state == BLOCKED)
+        ret = change_process_state_with_PID(PID_to_block, READY);
+    else
+        return 1;
+    
+    if(ret == 1)
+        return 1;
+
+    if(PID_to_block == PID_of_calling_process) {
+        //drawString("DIE-");
+        while(1){
+            if(get_state(PID_to_block) == READY)
+                break;
+            _hlt();
+        }
+    } /*else
+        drawString("KILL-");*/
     return 0;
 }

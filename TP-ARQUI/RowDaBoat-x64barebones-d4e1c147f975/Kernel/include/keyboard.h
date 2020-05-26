@@ -1,10 +1,11 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-//#include "stdlib.h"
+#include <stdint.h>
 
 void keyboard_handler(void);
 char get_keyboard_buffer(void);
+uint8_t buffer_is_empty();
 
 //info de osdev.wiki
 //el make-code y break-code de cada tecla que podria modificar el comportamiento de las demas
