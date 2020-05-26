@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>
 #include <screen_driver.h>
 
@@ -51,7 +53,7 @@ void * buddy_MALLOC (uint64_t bytesRequested) {
     currentHeader = firstHeader;
     nextHeader = currentHeader + sizeof(currentHeader) + currentHeader->size;
     buddyHeader * bestFit = NULL;
-    uint64_t aux;
+    uint64_t aux, newSize;
     uint8_t found = 0;
 
     while(nextHeader < firstHeader + TOTAL_HEAP_SIZE) {
@@ -67,19 +69,17 @@ void * buddy_MALLOC (uint64_t bytesRequested) {
 
     if(found == 0)
         return NULL;
+    else {
+        bestFit->status = OCCUPED;
 
-    uint64_t newSize;
+        while( ( (bestFit->size + sizeof(buddyHeader)) / 2 ) - sizeof(buddyHeader) >= bytesRequested && (bestFit->size + sizeof(buddyHeader)) / 2 >= MIN_BLOCK_SIZE ) {
+            newSize = (bestFit->size + sizeof(buddyHeader)) / 2 - sizeof(buddyHeader);
+            bestFit->size = newSize;
 
-    bestFit->status = OCCUPED;
-
-    while( ( (bestFit->size + sizeof(buddyHeader)) / 2 ) - sizeof(buddyHeader) >= bytesRequested && (bestFit->size + sizeof(buddyHeader)) / 2 >= MIN_BLOCK_SIZE ) {
-        newSize = (bestFit->size + sizeof(buddyHeader)) / 2 - sizeof(buddyHeader);
-        bestFit->size = newSize;
-
-        buddyHeader * newHeader = bestFit + newSize + sizeof(buddyHeader); 
-        newHeader->status = FREE;
-        newHeader->size = newSize;
+            buddyHeader * newHeader = bestFit + newSize + sizeof(buddyHeader); 
+            newHeader->status = FREE;
+            newHeader->size = newSize;
+        }
+        return bestFit + sizeof(buddyHeader);
     }
-
-    return bestFit + sizeof(buddyHeader);
 }

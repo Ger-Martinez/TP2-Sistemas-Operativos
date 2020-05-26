@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>
 #include "semaphores.h"
 #include "stdio.h"
@@ -195,6 +197,7 @@ void phylo_even_code(uint8_t pid_key) {
     } else {
         print(STD_ERR, "Impossible!\n");
         syscall_exit(pid_key);
+        return;  // never reached, just to keep warnings quiet
     }
     
 
@@ -254,6 +257,7 @@ void phylo_odd_code(uint8_t pid_key) {
     } else {
         print(STD_ERR, "Impossible!\n");
         syscall_exit(pid_key);
+        return;  // never reached, just to keep warnings quiet
     }
 
     ret = sem_wait(left_sem, this_process_PID);

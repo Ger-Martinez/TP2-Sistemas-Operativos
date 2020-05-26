@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <keyboard.h>
 #include <stdint.h>
 #include "process_manager.h"
@@ -112,7 +114,7 @@ static char get_letter_code(void){
 
         //Si no es ninguna tecla especial, entonces debe ser una letra/numero/signo
         default:
-            if (code > 0  &&  code < len  &&  map[code]!='\0'){
+            if (code < len  &&  map[code]!='\0'){
                 if(shift_pressed == 0){
                     if(caps_lock == 0){
                         //Busco en la tabla en minuscula:

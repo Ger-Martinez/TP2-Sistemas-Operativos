@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>
 #include "stdio.h"
 
@@ -107,28 +109,10 @@ void test_priority(uint8_t pid_key){
 
   print(STD_OUTPUT, "CHANGING PRIORITIES WHILE BLOCKED...\n");
   for(i = 0; i < TOTAL_PROCESSES; i++){
-    switch (i % 3){
-      case 0:
-        ret = syscall_nice(pids[i], 2); //medium priority
-        if(ret == 1) {
-          print(STD_ERR, "Error in syscall_nice, in test_priority\n");
-          syscall_exit(pid_key);
-        }
-        break;
-      case 1:
-        ret = syscall_nice(pids[i], 2); //medium priority
-        if(ret == 1) {
-          print(STD_ERR, "Error in syscall_nice, in test_priority\n");
-          syscall_exit(pid_key);
-        }
-        break;
-      case 2:
-        ret = syscall_nice(pids[i], 2); //medium priority
-        if(ret == 1) {
-          print(STD_ERR, "Error in syscall_nice, in test_priority\n");
-          syscall_exit(pid_key);
-        }
-        break;
+    ret = syscall_nice(pids[i], 2); //medium priority
+    if(ret == 1) {
+      print(STD_ERR, "Error in syscall_nice, in test_priority\n");
+      syscall_exit(pid_key);
     }
   }
 

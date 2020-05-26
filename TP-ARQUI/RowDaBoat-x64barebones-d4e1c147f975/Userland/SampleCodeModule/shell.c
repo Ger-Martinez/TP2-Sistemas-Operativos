@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "stdio.h"
 #include "shellCommands.h"
 #include "string.h"
@@ -141,7 +143,8 @@ static void search_command(char command_with_possible_parameter[], char* paramet
         }
         command_without_parameter[j] = '\0';
 
-        for(uint8_t k = 0, command_found = 0; k < NUMBER_OF_COMMANDS && !command_found; k++) {
+        command_found = 0;
+        for(uint8_t k = 0; k < NUMBER_OF_COMMANDS && !command_found; k++) {
             if( strcmp(command_without_parameter, all_commands[k]) == 0) {
                 number_of_command = k;
                 command_found = 1;

@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdint.h>
 #include "semaphores.h"
 #include "stdio.h"
@@ -23,7 +25,8 @@ static uint8_t first_time_creating_pipe = 1;
 static uint8_t ID_generator = 1;  // will increment over time
 
 char create_pipe(uint32_t writing_process_PID, uint32_t reading_process_PID) {
-    uint8_t i, ret;
+    uint8_t i;
+    int ret;
     uint16_t j;
     if(first_time_creating_pipe) {
         first_time_creating_pipe = 0;
